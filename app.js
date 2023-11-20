@@ -3,8 +3,6 @@ const { getTopics } = require('./controllers/topics-controller');
 const { errorHandler, apiErrorHandler, sqlErrorHandler } = require('./errors-handler');
 const app = express();
 
-app.use(express.json());
-
 app.get('/api/topics', getTopics);
 
 app.use(apiErrorHandler)

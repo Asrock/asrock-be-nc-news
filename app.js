@@ -1,8 +1,10 @@
 const express = require('express');
-const { getTopics } = require('./controllers/topics-controller');
 const { errorHandler, apiErrorHandler, sqlErrorHandler } = require('./errors-handler');
+const { getEndpointsInfo } = require('./controllers/api-controller');
+const { getTopics } = require('./controllers/topics-controller');
 const app = express();
 
+app.get('/api', getEndpointsInfo)
 app.get('/api/topics', getTopics);
 
 app.use(apiErrorHandler)

@@ -3,25 +3,37 @@ const app = require("../app.js")
 const db = require("../db/connection.js");
 const seed = require("../db/seeds/seed.js");
 const data = require("../db/data/test-data/index.js");
-
+const endpointInfo = require("../endpoints.json")
 
 beforeEach(() => seed(data));
 afterAll(() => db.end());
 
 describe("/api", () => {
-    const endpoints = app._router.stack
-        .filter(({route}) => route)
-        .map(({route})=> `${Object.keys(route.methods)?.[0].toUpperCase()} ${route.path}`);
-
     test("GET:200 sends an object describing all the endpoints availables to the client", () => {
         return request(app)
             .get("/api")
             .expect(200)
-            .then(({body}) => {
-                expect(Object.keys(body).length).toBe(endpoints.length);
-                endpoints.forEach(endpoint => {
-                    expect(typeof body[endpoint].description).toBe("string");
-                })
+            .then(({ body }) => expect(body).toEqual(endpointInfo));
+    });
+    test("GET:200 ensure the endpoints information is up to date with the application", () => {
+        return request(app)
+            .get("/api")
+            .expect(200)
+            .then(({ body }) => {
+                const appEndpoints = app._router.stack
+                    .filter(({ route }) => route && route.path !== "/api")
+                    .map(({ route }) => `${Object.keys(route.methods)[0].toUpperCase()} ${route.path}`);
+
+                expect(Object.keys(body).length).toBe(appEndpoints.length);
+                appEndpoints.forEach(endpoint => {
+                    expect(body).toHaveProperty(endpoint);
+                    expect(body[endpoint]).toMatchObject({
+                        description: expect.any(String),
+                        queries: expect.any(Array),
+                        format: expect.any(String),
+                        exampleResponse: expect.any(Object)
+                    })
+                });
             });
     });
 });
@@ -31,7 +43,7 @@ describe("/api/topics", () => {
         return request(app)
             .get("/api/topics")
             .expect(200)
-            .then(({body}) => {
+            .then(({ body }) => {
                 expect(body.topics.length).toBe(3);
                 body.topics.forEach(topic => {
                     expect(typeof topic.slug).toBe("string");

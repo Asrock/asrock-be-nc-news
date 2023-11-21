@@ -5,6 +5,9 @@ const seed = require("../db/seeds/seed.js");
 const data = require("../db/data/test-data/index.js");
 const endpointInfo = require("../endpoints.json")
 
+//Shorthand function
+const expectAnyOrNull = (sample) => expect.toBeOneOf([expect.any(sample), null]);
+
 beforeEach(() => seed(data));
 afterAll(() => db.end());
 
@@ -46,9 +49,35 @@ describe("/api/topics", () => {
             .then(({ body }) => {
                 expect(body.topics.length).toBe(3);
                 body.topics.forEach(topic => {
-                    expect(typeof topic.slug).toBe("string");
-                    expect(typeof topic.description).toBe("string");
+                    expect(topic).toMatchObject({
+                        slug: expect.any(String),
+                        description: expectAnyOrNull(String)
+                    });
                 });
+            });
+    });
+});
+
+describe("/api/articles", () => {
+    test("GET:200 sends an array of articles to the client", () => {
+        return request(app)
+            .get("/api/articles")
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.articles.length).toBe(13);
+                body.articles.forEach(article => {
+                    expect(article).toMatchObject({
+                        article_id: expect.any(Number),
+                        author: expect.any(String),
+                        title: expect.any(String),
+                        topic: expect.any(String),
+                        created_at: expectAnyOrNull(String),
+                        votes: expect.any(Number),
+                        article_img_url: expectAnyOrNull(String),
+                        comment_count: expect.any(Number)
+                    });
+                });
+                expect(body.articles).toBeSortedBy("created_at", { ascending: true });
             });
     });
 });

@@ -1,6 +1,6 @@
-exports.apiErrorHandler = ({statusCode, msg, ...err}, req, res, next) => {
-    return statusCode ? res.status(statusCode).send({ msg }) : next(err);
-};
+exports.apiErrorHandler = (err, req, res, next) => {
+    return err.status ? res.status(err.status).send({ msg: err.msg }) : next(err);
+}
 
 exports.sqlErrorHandler = (err, _, res, next) => {
     if (!err.code) return next(err);
@@ -10,11 +10,11 @@ exports.sqlErrorHandler = (err, _, res, next) => {
     switch (err.code) {
         case '42P01': //Table does not exist
         case '3D000': //DB does not exist
-            return res.status(500).send({msg: "database error"});
+            return res.status(500).send({ msg: "database error" });
         default: return res.status(400).send({ msg: 'Bad request' });
     }
-};
+}
 
-exports.errorHandler = (err, _, res, next) => {    
+exports.errorHandler = (err, _, res) => {
     res.status(500).send({ msg: 'Internal error' }) && console.log("UNHANDLED ERROR", err);
 }

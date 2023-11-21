@@ -5,9 +5,6 @@ const seed = require("../db/seeds/seed.js");
 const data = require("../db/data/test-data/index.js");
 const endpointInfo = require("../endpoints.json")
 
-//Shorthand function
-const expectAnyOrNull = (sample) => expect.toBeOneOf([expect.any(sample), null]);
-
 beforeEach(() => seed(data));
 afterAll(() => db.end());
 
@@ -51,24 +48,8 @@ describe("/api/topics", () => {
                 body.topics.forEach(topic => {
                     expect(topic).toMatchObject({
                         slug: expect.any(String),
-                        description: expectAnyOrNull(String)
+                        description: expect.any(String)
                     });
-                });
-            });
-    });
-});
-
-describe("/api/users", () => {
-    test("GET:200 sends an array of users to the client", () => {
-        return request(app)
-            .get("/api/users")
-            .expect(200)
-            .then(({ body }) => {
-                expect(body.users.length).toBe(4);
-                body.users.forEach(user => {
-                    expect(typeof user.username).toBe("string");
-                    expect(typeof user.name).toBe("string");
-                    expect(typeof user.avatar_url).toBe("string")
                 });
             });
     });
@@ -87,14 +68,22 @@ describe("/api/articles", () => {
                         author: expect.any(String),
                         title: expect.any(String),
                         topic: expect.any(String),
-                        created_at: expectAnyOrNull(String),
+                        created_at: expect.any(String),
                         votes: expect.any(Number),
-                        article_img_url: expectAnyOrNull(String),
+                        article_img_url: expect.any(String),
                         comment_count: expect.any(Number)
                     });
                 });
                 expect(body.articles).toBeSortedBy("created_at", { ascending: true });
             });
+    });
+    test("GET:200 sends an array of articles in ascending order by create_at", () => {
+        return request(app)
+        .get("/api/articles")
+        .expect(200)
+        .then(({ body }) => {
+            expect(body.articles).toBeSortedBy("created_at", { ascending: true });
+        });
     });
 });
 
@@ -122,16 +111,30 @@ describe("/api/articles/:article_id", () => {
                 expect(body.msg).toBe('article does not exist');
             });
     });
-});
-
-
-=======
     test('GET:400 sends an appropriate status and error message when given an invalid id', () => {
         return request(app)
             .get('/api/articles/not-a-article')
             .expect(400)
             .then(({ body }) => {
                 expect(body.msg).toBe('Bad request');
+            });
+    });
+});
+
+describe("/api/users", () => {
+    test("GET:200 sends an array of users to the client", () => {
+        return request(app)
+            .get("/api/users")
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.users.length).toBe(4);
+                body.users.forEach(user => {
+                    expect(user).toMatchObject({
+                        username: expect.any(String),
+                        name: expect.any(String),
+                        avatar_url: expect.any(String)
+                    })
+                });
             });
     });
 });

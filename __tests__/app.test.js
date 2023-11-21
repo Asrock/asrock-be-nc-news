@@ -5,6 +5,9 @@ const seed = require("../db/seeds/seed.js");
 const data = require("../db/data/test-data/index.js");
 const endpointInfo = require("../endpoints.json")
 
+//Shorthand function
+const expectAnyOrNull = (sample) => expect.toBeOneOf([expect.any(sample), null]);
+
 beforeEach(() => seed(data));
 afterAll(() => db.end());
 
@@ -46,8 +49,10 @@ describe("/api/topics", () => {
             .then(({ body }) => {
                 expect(body.topics.length).toBe(3);
                 body.topics.forEach(topic => {
-                    expect(typeof topic.slug).toBe("string");
-                    expect(typeof topic.description).toBe("string");
+                    expect(topic).toMatchObject({
+                        slug: expect.any(String),
+                        description: expectAnyOrNull(String)
+                    });
                 });
             });
     });
@@ -65,6 +70,68 @@ describe("/api/users", () => {
                     expect(typeof user.name).toBe("string");
                     expect(typeof user.avatar_url).toBe("string")
                 });
+            });
+    });
+});
+
+describe("/api/articles", () => {
+    test("GET:200 sends an array of articles to the client", () => {
+        return request(app)
+            .get("/api/articles")
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.articles.length).toBe(13);
+                body.articles.forEach(article => {
+                    expect(article).toMatchObject({
+                        article_id: expect.any(Number),
+                        author: expect.any(String),
+                        title: expect.any(String),
+                        topic: expect.any(String),
+                        created_at: expectAnyOrNull(String),
+                        votes: expect.any(Number),
+                        article_img_url: expectAnyOrNull(String),
+                        comment_count: expect.any(Number)
+                    });
+                });
+                expect(body.articles).toBeSortedBy("created_at", { ascending: true });
+            });
+    });
+});
+
+describe("/api/articles/:article_id", () => {
+    test("GET:200 sends a single article to the client", () => {
+        return request(app)
+            .get('/api/articles/1')
+            .expect(200)
+            .then(({ body }) => expect(body.article).toMatchObject({
+                article_id: 1,
+                author: "butter_bridge",
+                title: "Living in the shadow of a great man",
+                body: "I find this existence challenging",
+                topic: "mitch",
+                created_at: "2020-07-09T20:11:00.000Z",
+                votes: 100,
+                article_img_url: "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700"
+            }));
+    });
+    test('GET:404 sends an appropriate status and error message when given a valid but non-existent id', () => {
+        return request(app)
+            .get('/api/articles/999')
+            .expect(404)
+            .then(({ body }) => {
+                expect(body.msg).toBe('article does not exist');
+            });
+    });
+});
+
+
+=======
+    test('GET:400 sends an appropriate status and error message when given an invalid id', () => {
+        return request(app)
+            .get('/api/articles/not-a-article')
+            .expect(400)
+            .then(({ body }) => {
+                expect(body.msg).toBe('Bad request');
             });
     });
 });

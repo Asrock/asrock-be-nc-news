@@ -1,11 +1,13 @@
-const express = require('express');
-const { errorHandler, apiErrorHandler, sqlErrorHandler } = require('./errors-handler');
-const { getEndpointsInfo } = require('./controllers/api-controller');
-const { getTopics } = require('./controllers/topics-controller');
+const express = require("express");
+const { errorHandler, apiErrorHandler, sqlErrorHandler } = require("./errors-handler");
+const { getEndpointsInfo } = require("./controllers/api-controller");
+const { getTopics } = require("./controllers/topics-controller");
+const { getUsers } = require("./controllers/users-controller");
 const app = express();
 
-app.get('/api', getEndpointsInfo)
-app.get('/api/topics', getTopics);
+app.get("/api", getEndpointsInfo)
+app.get("/api/topics", getTopics);
+app.get("/api/users", getUsers)
 
 app.use(apiErrorHandler)
 app.use(sqlErrorHandler)

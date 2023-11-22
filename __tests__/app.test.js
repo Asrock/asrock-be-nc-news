@@ -135,15 +135,23 @@ describe("/api/articles/:article_id/comments", () => {
                 });
             });
     });
-    test('GET:404 sends an appropriate status and error message when given a valid but non-existent id', () => {
+    test("GET:200 when article does not have comments, sends an empty array to the client", () => {
+        return request(app)
+            .get("/api/articles/2/comments")
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.comments).toEqual([]);                
+            });
+    });
+    test('GET:404 sends an appropriate status and error message when given a valid but non-existent article_id', () => {
         return request(app)
             .get('/api/articles/999/comments')
             .expect(404)
             .then(({ body }) => {
-                expect(body.msg).toBe('comments does not exist');
+                expect(body.msg).toBe('article does not exist');
             });
     });
-    test('GET:400 sends an appropriate status and error message when given an invalid id', () => {
+    test('GET:400 sends an appropriate status and error message when given an invalid article_id', () => {
         return request(app)
             .get('/api/articles/not-a-article/comments')
             .expect(400)

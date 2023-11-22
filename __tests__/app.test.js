@@ -116,3 +116,41 @@ describe("/api/articles/:article_id", () => {
     });
 });
 
+describe("/api/articles/:article_id/comments", () => {
+    test("GET:200 sends an array of comments for an article to the client", () => {
+        return request(app)
+            .get("/api/articles/1/comments")
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.comments.length).toBe(11);
+                console.log(body.comments)
+                body.comments.forEach(comment => {
+                    expect(comment).toMatchObject({
+                        comment_id: expect.any(Number),
+                        votes: expect.any(Number),
+                        created_at: expectAnyOrNull(String),
+                        author: expect.any(String),
+                        body: expect.any(String),
+                        article_id: expect.any(Number)
+                    });
+                });
+            });
+    });
+    test('GET:404 sends an appropriate status and error message when given a valid but non-existent id', () => {
+        return request(app)
+            .get('/api/articles/999/comments')
+            .expect(404)
+            .then(({ body }) => {
+                expect(body.msg).toBe('comments does not exist');
+            });
+    });
+    test('GET:400 sends an appropriate status and error message when given an invalid id', () => {
+        return request(app)
+            .get('/api/articles/not-a-article/comments')
+            .expect(400)
+            .then(({ body }) => {
+                expect(body.msg).toBe('Bad request');
+            });
+    });
+});
+

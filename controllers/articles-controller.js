@@ -11,3 +11,9 @@ exports.getArticle = (req, res, next) => {
         .then(article => res.status(200).send({ article }))
         .catch(next);
 };
+
+exports.patchArticle = (req, res, next) => {
+    return articlesModel.modifyArticle(req.params.article_id, req.body)
+        .then(article => res.status(200).send({ article }))
+        .catch(next);
+};

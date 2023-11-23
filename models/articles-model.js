@@ -30,11 +30,15 @@ exports.getArticles = ({ topic, ...invalidQuery }) => {
 };
 
 exports.getArticle = (id) => db
-    .query("SELECT * FROM articles WHERE article_id = $1", [id])
+    .query(
+        `SELECT a.*,
+            (SELECT COUNT (1) FROM comments c WHERE c.article_id = a.article_id)::INT comment_count
+        FROM articles a
+        WHERE a.article_id = $1`, [id])
     .then(({ rows }) => rows.length ? rows[0] : Promise.reject({ status: 404, msg: "article does not exist" }));
 
 exports.modifyArticle = (id, { inc_votes, ...partialArticle }) => {
-    if(Object.keys(partialArticle).length) return Promise.reject({ status: 400, msg: "Bad request" });
+    if (Object.keys(partialArticle).length) return Promise.reject({ status: 400, msg: "Bad request" });
 
     return db
         .query(`UPDATE articles SET votes = (votes + $2) WHERE article_id = $1 RETURNING *`, [id, inc_votes])

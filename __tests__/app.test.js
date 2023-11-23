@@ -156,6 +156,12 @@ describe("/api/articles/:article_id", () => {
                 article_img_url: "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700"
             }));
     });
+    test("FEATURE GET:200 sends the total count of all the comments by article_id to the client", () => {
+        return request(app)
+            .get("/api/articles/1")
+            .expect(200)
+            .then(({ body }) => expect(body.article.comment_count).toBe(11));
+    });
     test("GET:404 sends an appropriate status and error message when given a valid but non-existent id", () => {
         return request(app)
             .get("/api/articles/999")

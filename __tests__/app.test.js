@@ -113,11 +113,17 @@ describe("/api/articles", () => {
                 .expect(200)
                 .then(({ body }) => expect(body.articles).toBeSortedBy("created_at", { ascending: true }));
         });
-        test("GET:200 sends an empty array of articles when topic is not found", () => {
+        test("GET:200 sends an empty array of articles when topic is not found in articles but it does exist", () => {
             return request(app)
-                .get("/api/articles?topic=not_in_topics")
+                .get("/api/articles?topic=paper")
                 .expect(200)
                 .then(({ body }) => expect(body.articles).toEqual([]));
+        });
+        test("GET:404 sends an empty array of articles when topic does not exist", () => {
+            return request(app)
+                .get("/api/articles?topic=not_in_topics")
+                .expect(404)
+                .then(({ body }) => expect(body.msg).toBe("topic does not exist"));
         });
         test("GET:400 sends an appropriate status and error message when given an invalid filter", () => {
             return request(app)

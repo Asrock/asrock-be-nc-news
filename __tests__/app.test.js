@@ -85,6 +85,53 @@ describe("/api/articles", () => {
             expect(body.articles).toBeSortedBy("created_at", { ascending: true });
         });
     });
+
+    describe("/api/articles?topic=", () => {
+        test("GET:200 when matches the topic sends an array of articles to the client", () => {
+            return request(app)
+                .get("/api/articles?topic=mitch")
+                .expect(200)
+                .then(({ body }) => {
+                    expect(body.articles.length).toBe(12);
+                    body.articles.forEach(article => {
+                        expect(article).toMatchObject({
+                            article_id: expect.any(Number),
+                            author: expect.any(String),
+                            title: expect.any(String),
+                            topic: "mitch",
+                            created_at: expect.any(String),
+                            votes: expect.any(Number),
+                            article_img_url: expect.any(String),
+                            comment_count: expect.any(Number)
+                        });
+                    });
+                });
+        });        
+        test("GET:200 sends an array of articles in ascending order by create_at", () => {
+            return request(app)
+                .get("/api/articles?topic=mitch")
+                .expect(200)
+                .then(({ body }) => expect(body.articles).toBeSortedBy("created_at", { ascending: true }));
+        });
+        test("GET:200 sends an empty array of articles when topic is not found", () => {
+            return request(app)
+                .get("/api/articles?topic=not_in_topics")
+                .expect(200)
+                .then(({ body }) => expect(body.articles).toEqual([]));
+        });
+        test("GET:400 sends an appropriate status and error message when given an invalid filter", () => {
+            return request(app)
+                .get("/api/articles?test=mitch")
+                .expect(400)
+                .then(({ body }) => expect(body.msg).toBe('Bad request'));
+        });
+        test("GET:400 sends an appropriate status and error message when given the same filter twice", () => {
+            return request(app)
+                .get("/api/articles?topic=mitch&topic=mitch")
+                .expect(400)
+                .then(({ body }) => expect(body.msg).toBe('Bad request'));
+        });
+    });
 });
 
 describe("/api/articles/:article_id", () => {

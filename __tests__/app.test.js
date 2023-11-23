@@ -279,11 +279,11 @@ describe("/api/articles/:article_id/comments", () => {
             .expect(400)
             .then(({ body }) => expect(body.msg).toBe("Bad request"));
     });
-    test("POST:200 creates a new comment to the given to the article and username", () => {
+    test("POST:201 creates a new comment to the given to the article and username", () => {
         return request(app)
             .post("/api/articles/1/comments")
             .send({ username: "butter_bridge", body: "test" })
-            .expect(200)
+            .expect(201)
             .then(({ body }) => {
                 expect(body.comment).toMatchObject({
                     comment_id: expect.any(Number),

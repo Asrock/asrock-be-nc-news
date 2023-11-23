@@ -27,6 +27,6 @@ exports.getArticleComments = (req, res, next) => {
 
 exports.postArticleComment = (req, res, next) => {
     return commentsModel.createComment(req.params, req.body)
-        .then(comment => res.status(200).send({ comment }))
+        .then(comment => res.status(201).send({ comment }))
         .catch(next);
 };

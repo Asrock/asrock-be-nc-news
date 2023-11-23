@@ -138,3 +138,26 @@ describe("/api/users", () => {
             });
     });
 });
+
+describe("/api/users/:username", () => {
+    test("GET:200 sends a single user to the client", () => {
+        return request(app)
+            .get("/api/users/butter_bridge")
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.user).toMatchObject({
+                    username: "butter_bridge",
+                    name: "jonny",
+                    avatar_url: "https://www.healthytherapies.com/wp-content/uploads/2016/06/Lime3.jpg"
+                })
+            });
+    });
+    test('GET:404 sends an appropriate status and error message when given a valid but non-existent id', () => {
+        return request(app)
+            .get('/api/users/user')
+            .expect(404)
+            .then(({ body }) => {
+                expect(body.msg).toBe("user does not exists");
+            });
+    });
+});

@@ -15,6 +15,6 @@ exports.sqlErrorHandler = (err, _, res, next) => {
     }
 }
 
-exports.errorHandler = (err, _, res) => {
-    res.status(500).send({ msg: 'Internal error' }) && console.log("Server error: ", err);
+exports.errorHandler = (err, _, res, next) => {
+    res.status(500).send({ msg: 'Internal error' });
 }

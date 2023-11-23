@@ -14,7 +14,9 @@
     },
     "GET /api/articles": {
         "description": "serves an array of all articles",
-        "queries": [],
+        "queries": [
+            "topic"
+        ],
         "format": "json",
         "exampleResponse": {
             "articles": [
@@ -85,7 +87,7 @@
             ]
         }
     },
-      "GET /api/users": {
+    "GET /api/users": {
         "description": "serves an array of all users",
         "queries": [],
         "format": "json",

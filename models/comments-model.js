@@ -19,4 +19,4 @@ exports.createComment = ({ article_id }, { username, body, ...invalidKeys }) => 
 
 exports.deleteComment = (id) => db
     .query("DELETE FROM comments WHERE comment_id = $1", [id])
-    .then(({rowCount}) => !!rowCount);
+    .then(({rowCount}) => rowCount || Promise.reject({status:404, msg: "comment does not exist"}));

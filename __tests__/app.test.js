@@ -366,4 +366,10 @@ describe("/api/comments/:comment_id", () => {
             .expect(400)
             .then(({ body }) => expect(body.msg).toBe("Bad request"));
     });
+    test("DELETE:404 sends an unappropriate status and error message when given a non existent comment_id", () => {
+        return request(app)
+            .delete("/api/comments/999")
+            .expect(404)
+            .then(({ body }) => expect(body.msg).toBe("comment does not exist"));
+    });
 });

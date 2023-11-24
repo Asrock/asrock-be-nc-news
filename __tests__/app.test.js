@@ -352,3 +352,23 @@ describe("/api/users", () => {
             });
     });
 });
+
+describe("/api/comments/:comment_id", () => {
+    test("DELETE:204 delete the given comment by comment_id", () => {
+        return request(app)
+            .delete("/api/comments/1")
+            .expect(204);
+    });
+    test("DELETE:400 sends an appropriate status and error message when given an invalid comment_id", () => {
+        return request(app)
+            .delete("/api/comments/not_a_comment_id")
+            .expect(400)
+            .then(({ body }) => expect(body.msg).toBe("Bad request"));
+    });
+    test("DELETE:404 sends an unappropriate status and error message when given a non existent comment_id", () => {
+        return request(app)
+            .delete("/api/comments/999")
+            .expect(404)
+            .then(({ body }) => expect(body.msg).toBe("comment does not exist"));
+    });
+});

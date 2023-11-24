@@ -20,7 +20,7 @@ exports.patchArticle = (req, res, next) => {
 };
 
 exports.getArticleComments = (req, res, next) => {
-    return commentsModel.getComments(req.params)
+    return commentsModel.getComments(req.params, req.query)
         .then(comments => res.status(200).send({ comments }))
         .catch(next);
 };

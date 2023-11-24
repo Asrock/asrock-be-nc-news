@@ -90,6 +90,7 @@
             ]
         }
     },
+
     "POST /api/articles/:article_id/comments": {
         "description": "creates a new comment to given article id",
         "queries": [],

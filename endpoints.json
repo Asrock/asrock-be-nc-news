@@ -33,6 +33,31 @@
             ]
         }
     },
+    "POST /api/articles": {
+        "description": "creates a new article for an existing author and topic",
+        "queries": [],
+        "format": "json",
+        "exampleResponse": {
+            "article": {
+                "article_id": 1,
+                "author": "jessjelly",
+                "title": "The Rise Of Thinking Machines: How IBM's Watson Takes On The World",
+                "body": "Many people know Watson as the IBM-developed cognitive super computer that won the Jeopardy! gameshow in 2011. In truth, Watson is not actually a computer but a set of algorithms and APIs, and since winning TV fame (and a $1 million prize) IBM has put it to use tackling tough problems in every industry from healthcare to finance. Most recently, IBM has announced several new partnerships which aim to take things even further, and put its cognitive capabilities to use solving a whole new range of problems around the world.",
+                "topic": "coding",
+                "article_img_url": "https://images.pexels.com/photos/373543/pexels-photo-373543.jpeg?w=700&h=700 (OPTIONAL)",
+                "created_at": "2020-10-11T11:24:00.000Z",
+                "votes": 0,
+                "comment_count": 0
+            }
+        },
+        "exampleRequest": {
+            "author": "jessjelly",
+            "title": "The Rise Of Thinking Machines: How IBM's Watson Takes On The World",
+            "body": "Many people know Watson as the IBM-developed cognitive super computer that won the Jeopardy! gameshow in 2011. In truth, Watson is not actually a computer but a set of algorithms and APIs, and since winning TV fame (and a $1 million prize) IBM has put it to use tackling tough problems in every industry from healthcare to finance. Most recently, IBM has announced several new partnerships which aim to take things even further, and put its cognitive capabilities to use solving a whole new range of problems around the world.",
+            "topic": "coding",
+            "article_img_url": "https://images.pexels.com/photos/373543/pexels-photo-373543.jpeg?w=700&h=700"
+        }
+    },
     "GET /api/articles/:article_id": {
         "description": "serves a single article by id",
         "queries": [],
@@ -92,16 +117,14 @@
         "queries": [],
         "format": "json",
         "exampleResponse": {
-            "comments": [
-                {
-                    "comment_id": 2,
-                    "body": "The beautiful thing about treasure is that it exists. Got to find out what kind of sheets these are; not cotton, not rayon, silky.",
-                    "article_id": 1,
-                    "author": "butter_bridge",
-                    "votes": 0,
-                    "created_at": "2023-11-23T12: 30: 00.000Z"
-                }
-            ]
+            "comment": {
+                "comment_id": 2,
+                "body": "The beautiful thing about treasure is that it exists. Got to find out what kind of sheets these are; not cotton, not rayon, silky.",
+                "article_id": 1,
+                "author": "butter_bridge",
+                "votes": 0,
+                "created_at": "2023-11-23T12: 30: 00.000Z"
+            }
         },
         "exampleRequest": {
             "username": "butter_bridge",

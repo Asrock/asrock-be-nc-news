@@ -19,6 +19,12 @@ exports.patchArticle = (req, res, next) => {
         .catch(next);
 };
 
+exports.postArticle = (req, res, next) => {
+    return articlesModel.createArticle(req.body)
+        .then(article => res.status(201).send({ article }))
+        .catch(next);
+};
+
 exports.getArticleComments = (req, res, next) => {
     return commentsModel.getComments(req.params, req.query)
         .then(comments => res.status(200).send({ comments }))

@@ -138,7 +138,200 @@ describe("/api/articles", () => {
                 .then(({ body }) => expect(body.msg).toBe("Bad request"));
         });
     });
+
+    describe("/api/articles?sort=&order=    FEATURE REQUEST ", () => {
+        describe("GET:200 sends a sorted/ordered array of articles", () => {
+            test("When given order set default column to created_at", () => {
+                return request(app)
+                    .get("/api/articles?order=asc")
+                    .expect(200)
+                    .then(({ body }) => expect(body.articles).toBeSortedBy("created_at", { ascending: true }));
+            });
+            test("When given sort column set default order to desc", () => {
+                return request(app)
+                    .get("/api/articles?sort_by=title")
+                    .expect(200)
+                    .then(({ body }) => expect(body.articles).toBeSortedBy("title", { descending: true }));
+            });
+            test("When given column and order", () => {
+                return request(app)
+                    .get("/api/articles?sort_by=title&order=asc")
+                    .expect(200)
+                    .then(({ body }) => expect(body.articles).toBeSortedBy("title", { ascending: true }));
+            });
+            test("When given more than two columns and equal or less orders", () => {
+                return request(app)
+                    .get("/api/articles?sort_by=title&order=asc&sort_by=author&order=desc")
+                    .expect(200)
+                    .then(({ body }) => {
+                        const ref = body.articles.map(article => article);
+                        const opts = ['en', { numeric: true }];
+                        const sorted = body.articles.sort((a, b) => a.title.localeCompare(b.title, ...opts) || b.author.localeCompare(a.author, ...opts));
+                        expect(sorted).toEqual(ref)
+                    });
+            });
+            test("Should be compatible with other queries", () => {
+                return request(app)
+                    .get("/api/articles?sort_by=title&order=asc&sort_by=author&topic=mitch")
+                    .expect(200)
+                    .then(({ body }) => {
+                        const ref = body.articles.map(article => article);
+                        const opts = ['en', { numeric: true }];
+                        const sorted = body.articles.sort((a, b) => a.title.localeCompare(b.title, ...opts) || b.author.localeCompare(a.author, ...opts));
+                        expect(sorted).toEqual(ref)
+                    });
+            });
+            test("Should be compatible with other queries when using same column names", () => {
+                return request(app)
+                    .get("/api/articles?sort_by=topic&order=asc&sort_by=author&topic=mitch")
+                    .expect(200)
+                    .then(({ body }) => {
+                        const ref = body.articles.map(article => article);
+                        const opts = ['en', { numeric: true }];
+                        const sorted = body.articles.sort((a, b) => a.topic.localeCompare(b.topic, ...opts) || b.author.localeCompare(a.author, ...opts));
+                        expect(sorted).toEqual(ref)
+                    });
+            });
+        });
+        describe("GET:400 sends an appropriate status and error message when given invalid sort/order query parameters", () => {
+            test("When sort_by has duplicated values", () => {
+                return request(app)
+                    .get("/api/articles?sort_by=title&sort_by=title")
+                    .expect(400)
+                    .then(({ body }) => expect(body.msg).toBe("Bad request"));
+            });
+            test("When sort_by is set and order is not paired with sort_by", () => {
+                return request(app)
+                    .get("/api/articles?sort_by=title&order=asc&order=desc")
+                    .expect(400)
+                    .then(({ body }) => expect(body.msg).toBe("Bad request"));
+            });
+            test("When sort_by is not one of the columns", () => {
+                return request(app)
+                    .get("/api/articles?sort_by=not_a_column")
+                    .expect(400)
+                    .then(({ body }) => expect(body.msg).toBe("Bad request"));
+            });
+        });
+    });
+    test("POST:201 creates a new article to the given topic and username", () => {
+        return request(app)
+            .post("/api/articles")
+            .send({
+                author: "butter_bridge",
+                title: "The Rise Of Thinking Machines: How IBM's Watson Takes On The World",
+                body: "Many people know Watson as the IBM-developed cognitive super computer that won the Jeopardy! gameshow in 2011. In truth, Watson is not actually a computer but a set of algorithms and APIs, and since winning TV fame (and a $1 million prize) IBM has put it to use tackling tough problems in every industry from healthcare to finance. Most recently, IBM has announced several new partnerships which aim to take things even further, and put its cognitive capabilities to use solving a whole new range of problems around the world.",
+                topic: "cats",
+                article_img_url: "https://images.pexels.com/photos/373543/pexels-photo-373543.jpeg?w=700&h=700"
+            })
+            .expect(201)
+            .then(({ body }) => {
+                expect(body.article).toMatchObject({
+                    article_id: 14,
+                    author: "butter_bridge",
+                    title: "The Rise Of Thinking Machines: How IBM's Watson Takes On The World",
+                    body: "Many people know Watson as the IBM-developed cognitive super computer that won the Jeopardy! gameshow in 2011. In truth, Watson is not actually a computer but a set of algorithms and APIs, and since winning TV fame (and a $1 million prize) IBM has put it to use tackling tough problems in every industry from healthcare to finance. Most recently, IBM has announced several new partnerships which aim to take things even further, and put its cognitive capabilities to use solving a whole new range of problems around the world.",
+                    topic: "cats",
+                    article_img_url: "https://images.pexels.com/photos/373543/pexels-photo-373543.jpeg?w=700&h=700",
+                    created_at: expect.any(String),
+                    votes: 0,
+                    comment_count: 0
+                });
+            });
+    });
+    test("POST:201 creates a new article without optional article_img_url key", () => {
+        return request(app)
+            .post("/api/articles")
+            .send({
+                author: "butter_bridge",
+                title: "The Rise Of Thinking Machines: How IBM's Watson Takes On The World",
+                body: "Many people know Watson as the IBM-developed cognitive super computer that won the Jeopardy! gameshow in 2011. In truth, Watson is not actually a computer but a set of algorithms and APIs, and since winning TV fame (and a $1 million prize) IBM has put it to use tackling tough problems in every industry from healthcare to finance. Most recently, IBM has announced several new partnerships which aim to take things even further, and put its cognitive capabilities to use solving a whole new range of problems around the world.",
+                topic: "cats"
+            })
+            .expect(201)
+            .then(({ body }) => {
+                expect(body.article).toMatchObject({
+                    article_id: 14,
+                    author: "butter_bridge",
+                    title: "The Rise Of Thinking Machines: How IBM's Watson Takes On The World",
+                    body: "Many people know Watson as the IBM-developed cognitive super computer that won the Jeopardy! gameshow in 2011. In truth, Watson is not actually a computer but a set of algorithms and APIs, and since winning TV fame (and a $1 million prize) IBM has put it to use tackling tough problems in every industry from healthcare to finance. Most recently, IBM has announced several new partnerships which aim to take things even further, and put its cognitive capabilities to use solving a whole new range of problems around the world.",
+                    topic: "cats",
+                    article_img_url: "https://images.pexels.com/photos/97050/pexels-photo-97050.jpeg?w=700&h=700",
+                    created_at: expect.any(String),
+                    votes: 0,
+                    comment_count: 0
+                });
+            });
+    });
+    describe("POST:422 sends an appropriate status and error message", () => {
+        test("When given a non-existent topic", () => {
+            return request(app)
+                .post("/api/articles")
+                .send({
+                    author: "butter_bridge",
+                    title: "The Rise Of Thinking Machines: How IBM's Watson Takes On The World",
+                    body: "Many people know Watson as the IBM-developed cognitive super computer that won the Jeopardy! gameshow in 2011. In truth, Watson is not actually a computer but a set of algorithms and APIs, and since winning TV fame (and a $1 million prize) IBM has put it to use tackling tough problems in every industry from healthcare to finance. Most recently, IBM has announced several new partnerships which aim to take things even further, and put its cognitive capabilities to use solving a whole new range of problems around the world.",
+                    topic: "not_a_topic"
+                })
+                .expect(422)
+                .then(({ body }) => expect(body.msg).toBe("Unprocessable Entity"));
+        });
+        test("When given a non-existent username", () => {
+            return request(app)
+                .post("/api/articles")
+                .send({
+                    author: "not_an_user",
+                    title: "The Rise Of Thinking Machines: How IBM's Watson Takes On The World",
+                    body: "Many people know Watson as the IBM-developed cognitive super computer that won the Jeopardy! gameshow in 2011. In truth, Watson is not actually a computer but a set of algorithms and APIs, and since winning TV fame (and a $1 million prize) IBM has put it to use tackling tough problems in every industry from healthcare to finance. Most recently, IBM has announced several new partnerships which aim to take things even further, and put its cognitive capabilities to use solving a whole new range of problems around the world.",
+                    topic: "cats"
+                })
+                .expect(422)
+                .then(({ body }) => expect(body.msg).toBe("Unprocessable Entity"));
+        });
+        test("When given an invalid author", () => {
+            return request(app)
+                .post("/api/articles")
+                .send({
+                    author: 1,
+                    title: "The Rise Of Thinking Machines: How IBM's Watson Takes On The World",
+                    body: "Many people know Watson as the IBM-developed cognitive super computer that won the Jeopardy! gameshow in 2011. In truth, Watson is not actually a computer but a set of algorithms and APIs, and since winning TV fame (and a $1 million prize) IBM has put it to use tackling tough problems in every industry from healthcare to finance. Most recently, IBM has announced several new partnerships which aim to take things even further, and put its cognitive capabilities to use solving a whole new range of problems around the world.",
+                    topic: "cats",
+                })
+                .expect(422)
+                .then(({ body }) => expect(body.msg).toBe("Unprocessable Entity"));
+        });
+        test("When given an invalid topic", () => {
+            return request(app)
+                .post("/api/articles")
+                .send({
+                    author: "butter_bridge",
+                    title: "The Rise Of Thinking Machines: How IBM's Watson Takes On The World",
+                    body: "Many people know Watson as the IBM-developed cognitive super computer that won the Jeopardy! gameshow in 2011. In truth, Watson is not actually a computer but a set of algorithms and APIs, and since winning TV fame (and a $1 million prize) IBM has put it to use tackling tough problems in every industry from healthcare to finance. Most recently, IBM has announced several new partnerships which aim to take things even further, and put its cognitive capabilities to use solving a whole new range of problems around the world.",
+                    topic: 1
+                })
+                .expect(422)
+                .then(({ body }) => expect(body.msg).toBe("Unprocessable Entity"));
+        });
+    });
+    describe("POST:400 sends an appropriate status and error message", () => {
+        test("When given an invalid request body", () => {
+            return request(app)
+                .post("/api/articles")
+                .send({ msg: "hi" })
+                .expect(400)
+                .then(({ body }) => expect(body.msg).toBe("Bad request"));
+        });
+        test("When no request body is given", () => {
+            return request(app)
+                .post("/api/articles")
+                .expect(400)
+                .then(({ body }) => expect(body.msg).toBe("Bad request"));
+        });
+    });
 });
+
+
+
 
 describe("/api/articles/:article_id", () => {
     test("GET:200 sends a single article to the client", () => {
@@ -155,6 +348,12 @@ describe("/api/articles/:article_id", () => {
                 votes: 100,
                 article_img_url: "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700"
             }));
+    });
+    test("FEATURE GET:200 sends the total count of all the comments by article_id to the client", () => {
+        return request(app)
+            .get("/api/articles/1")
+            .expect(200)
+            .then(({ body }) => expect(body.article.comment_count).toBe(11));
     });
     test("GET:404 sends an appropriate status and error message when given a valid but non-existent id", () => {
         return request(app)
@@ -279,7 +478,7 @@ describe("/api/articles/:article_id/comments", () => {
             .expect(400)
             .then(({ body }) => expect(body.msg).toBe("Bad request"));
     });
-    test("POST:201 creates a new comment to the given to the article and username", () => {
+    test("POST:201 creates a new comment to the given article and username", () => {
         return request(app)
             .post("/api/articles/1/comments")
             .send({ username: "butter_bridge", body: "test" })
@@ -308,7 +507,7 @@ describe("/api/articles/:article_id/comments", () => {
                 .post("/api/articles/1/comments")
                 .send({ username: "not_a_user", body: "test" })
                 .expect(404)
-                .then(({ body }) => expect(body.msg).toBe("username does not exist"));
+                .then(({ body }) => expect(body.msg).toBe("user does not exist"));
         });
     });
     describe("POST:400 sends an appropriate status and error message", () => {
@@ -405,6 +604,93 @@ describe("/api/articles/:article_id/comments", () => {
     });
 });
 
+describe("/api/comments/:comment_id", () => {
+    describe("PATCH:200 updates a comment by id", () => {
+        test("When given an object with property inc_votes will increment the votes", () => {
+            return request(app)
+                .patch("/api/comments/1")
+                .send({ inc_votes: 1 })
+                .expect(200)
+                .then(({ body }) => expect(body.comment).toMatchObject({ votes: 17 }));
+        });
+        test("When given an object with property inc_votes negative will decrement the votes", () => {
+            return request(app)
+                .patch("/api/comments/1")
+                .send({ inc_votes: -1 })
+                .expect(200)
+                .then(({ body }) => expect(body.comment).toMatchObject({ votes: 15 }));
+        });
+        test("When given an object with property inc_votes negative will decrement the votes allowing negative numbers", () => {
+            return request(app)
+                .patch("/api/comments/1")
+                .send({ inc_votes: -20 })
+                .expect(200)
+                .then(({ body }) => expect(body.comment).toMatchObject({ votes: -4 }));
+        });
+        test("Should not modify the other properties", () => {
+            return request(app)
+                .patch("/api/comments/1")
+                .send({ inc_votes: 0 })
+                .expect(200)
+                .then(({ body }) => expect(body.comment).toMatchObject({
+                    comment_id: 1,
+                    body: "Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!",
+                    article_id: 9,
+                    author: "butter_bridge",
+                    votes: 16,
+                    created_at: "2020-04-06T12:17:00.000Z",
+                }));
+        });
+    });
+    test("PATCH:404 sends an appropriate status and error message when given a valid but non-existent id", () => {
+        return request(app)
+            .patch("/api/comments/999")
+            .send({ inc_votes: 1 })
+            .expect(404)
+            .then(({ body }) => expect(body.msg).toBe("comment does not exist"));
+    });
+    describe("PATCH:400 sends an appropriate status and error message", () => {
+        test("When given an invalid id", () => {
+            return request(app)
+                .patch("/api/comments/not-a-comment")
+                .send({ inc_votes: 1 })
+                .expect(400)
+                .then(({ body }) => expect(body.msg).toBe("Bad request"));
+        });
+        test("When given body is not valid", () => {
+            return request(app)
+                .patch("/api/comments/1")
+                .send({ msg: "hi" })
+                .expect(400)
+                .then(({ body }) => expect(body.msg).toBe("Bad request"));
+        });
+        test("When body is empty", () => {
+            return request(app)
+                .patch("/api/comments/1")
+                .expect(400)
+                .then(({ body }) => expect(body.msg).toBe("Bad request"));
+        });
+    });
+
+    test("DELETE:204 delete the given comment by comment_id", () => {
+        return request(app)
+            .delete("/api/comments/1")
+            .expect(204);
+    });
+    test("DELETE:400 sends an appropriate status and error message when given an invalid comment_id", () => {
+        return request(app)
+            .delete("/api/comments/not_a_comment_id")
+            .expect(400)
+            .then(({ body }) => expect(body.msg).toBe("Bad request"));
+    });
+    test("DELETE:404 sends an unappropriate status and error message when given a non existent comment_id", () => {
+        return request(app)
+            .delete("/api/comments/999")
+            .expect(404)
+            .then(({ body }) => expect(body.msg).toBe("comment does not exist"));
+    });
+});
+
 describe("/api/users", () => {
     test("GET:200 sends an array of users to the client", () => {
         return request(app)
@@ -419,6 +705,190 @@ describe("/api/users", () => {
                         avatar_url: expect.any(String)
                     })
                 });
+            });
+    });
+});
+
+describe("/api/users/:username", () => {
+    test("GET:200 sends a single user to the client", () => {
+        return request(app)
+            .get("/api/users/butter_bridge")
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.user).toMatchObject({
+                    username: "butter_bridge",
+                    name: "jonny",
+                    avatar_url: "https://www.healthytherapies.com/wp-content/uploads/2016/06/Lime3.jpg"
+                })
+            });
+    });
+    test('GET:404 sends an appropriate status and error message when given a valid but non-existent id', () => {
+        return request(app)
+            .get('/api/users/user')
+            .expect(404)
+            .then(({ body }) => {
+                expect(body.msg).toBe("user does not exist");
+            });
+    });
+});
+
+describe("/api/comments/:comment_id", () => {
+    describe("PATCH:200 updates a comment by id", () => {
+        test("When given an object with property inc_votes will increment the votes", () => {
+            return request(app)
+                .patch("/api/comments/1")
+                .send({ inc_votes: 1 })
+                .expect(200)
+                .then(({ body }) => expect(body.comment).toMatchObject({ votes: 17 }));
+        });
+        test("When given an object with property inc_votes negative will decrement the votes", () => {
+            return request(app)
+                .patch("/api/comments/1")
+                .send({ inc_votes: -1 })
+                .expect(200)
+                .then(({ body }) => expect(body.comment).toMatchObject({ votes: 15 }));
+        });
+        test("When given an object with property inc_votes negative will decrement the votes allowing negative numbers", () => {
+            return request(app)
+                .patch("/api/comments/1")
+                .send({ inc_votes: -20 })
+                .expect(200)
+                .then(({ body }) => expect(body.comment).toMatchObject({ votes: -4 }));
+        });
+        test("Should not modify the other properties", () => {
+            return request(app)
+                .patch("/api/comments/1")
+                .send({ inc_votes: 0 })
+                .expect(200)
+                .then(({ body }) => expect(body.comment).toMatchObject({
+                    comment_id: 1,
+                    body: "Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!",
+                    article_id: 9,
+                    author: "butter_bridge",
+                    votes: 16,
+                    created_at: "2020-04-06T12:17:00.000Z",
+                }));
+        });
+    });
+    test("PATCH:404 sends an appropriate status and error message when given a valid but non-existent id", () => {
+        return request(app)
+            .patch("/api/comments/999")
+            .send({ inc_votes: 1 })
+            .expect(404)
+            .then(({ body }) => expect(body.msg).toBe("comment does not exist"));
+    });
+    describe("PATCH:400 sends an appropriate status and error message", () => {
+        test("When given an invalid id", () => {
+            return request(app)
+                .patch("/api/comments/not-a-comment")
+                .send({ inc_votes: 1 })
+                .expect(400)
+                .then(({ body }) => expect(body.msg).toBe("Bad request"));
+        });
+        test("When given body is not valid", () => {
+            return request(app)
+                .patch("/api/comments/1")
+                .send({ msg: "hi" })
+                .expect(400)
+                .then(({ body }) => expect(body.msg).toBe("Bad request"));
+        });
+        test("When body is empty", () => {
+            return request(app)
+                .patch("/api/comments/1")
+                .expect(400)
+                .then(({ body }) => expect(body.msg).toBe("Bad request"));
+        });
+    });
+});
+
+describe("/api/comments/:comment_id", () => {
+    describe("PATCH:200 updates a comment by id", () => {
+        test("When given an object with property inc_votes will increment the votes", () => {
+            return request(app)
+                .patch("/api/comments/1")
+                .send({ inc_votes: 1 })
+                .expect(200)
+                .then(({ body }) => expect(body.comment).toMatchObject({ votes: 17 }));
+        });
+        test("When given an object with property inc_votes negative will decrement the votes", () => {
+            return request(app)
+                .patch("/api/comments/1")
+                .send({ inc_votes: -1 })
+                .expect(200)
+                .then(({ body }) => expect(body.comment).toMatchObject({ votes: 15 }));
+        });
+        test("When given an object with property inc_votes negative will decrement the votes allowing negative numbers", () => {
+            return request(app)
+                .patch("/api/comments/1")
+                .send({ inc_votes: -20 })
+                .expect(200)
+                .then(({ body }) => expect(body.comment).toMatchObject({ votes: -4 }));
+        });
+        test("Should not modify the other properties", () => {
+            return request(app)
+                .patch("/api/comments/1")
+                .send({ inc_votes: 0 })
+                .expect(200)
+                .then(({ body }) => expect(body.comment).toMatchObject({
+                    comment_id: 1,
+                    body: "Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!",
+                    article_id: 9,
+                    author: "butter_bridge",
+                    votes: 16,
+                    created_at: "2020-04-06T12:17:00.000Z",
+                }));
+        });
+    });
+    test("PATCH:404 sends an appropriate status and error message when given a valid but non-existent id", () => {
+        return request(app)
+            .patch("/api/comments/999")
+            .send({ inc_votes: 1 })
+            .expect(404)
+            .then(({ body }) => expect(body.msg).toBe("comment does not exist"));
+    });
+    describe("PATCH:400 sends an appropriate status and error message", () => {
+        test("When given an invalid id", () => {
+            return request(app)
+                .patch("/api/comments/not-a-comment")
+                .send({ inc_votes: 1 })
+                .expect(400)
+                .then(({ body }) => expect(body.msg).toBe("Bad request"));
+        });
+        test("When given body is not valid", () => {
+            return request(app)
+                .patch("/api/comments/1")
+                .send({ msg: "hi" })
+                .expect(400)
+                .then(({ body }) => expect(body.msg).toBe("Bad request"));
+        });
+        test("When body is empty", () => {
+            return request(app)
+                .patch("/api/comments/1")
+                .expect(400)
+                .then(({ body }) => expect(body.msg).toBe("Bad request"));
+        });
+    });
+});
+
+describe("/api/users/:username", () => {
+    test("GET:200 sends a single user to the client", () => {
+        return request(app)
+            .get("/api/users/butter_bridge")
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.user).toMatchObject({
+                    username: "butter_bridge",
+                    name: "jonny",
+                    avatar_url: "https://www.healthytherapies.com/wp-content/uploads/2016/06/Lime3.jpg"
+                })
+            });
+    });
+    test('GET:404 sends an appropriate status and error message when given a valid but non-existent id', () => {
+        return request(app)
+            .get('/api/users/user')
+            .expect(404)
+            .then(({ body }) => {
+                expect(body.msg).toBe("user does not exist");
             });
     });
 });

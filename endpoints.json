@@ -15,7 +15,9 @@
     "GET /api/articles": {
         "description": "serves an array of all articles",
         "queries": [
-            "topic"
+            "topic",
+            "sort_by",
+            "order"
         ],
         "format": "json",
         "exampleResponse": {
@@ -33,6 +35,31 @@
             ]
         }
     },
+    "POST /api/articles": {
+        "description": "creates a new article for an existing author and topic",
+        "queries": [],
+        "format": "json",
+        "exampleResponse": {
+            "article": {
+                "article_id": 1,
+                "author": "jessjelly",
+                "title": "The Rise Of Thinking Machines: How IBM's Watson Takes On The World",
+                "body": "Many people know Watson as the IBM-developed cognitive super computer that won the Jeopardy! gameshow in 2011. In truth, Watson is not actually a computer but a set of algorithms and APIs, and since winning TV fame (and a $1 million prize) IBM has put it to use tackling tough problems in every industry from healthcare to finance. Most recently, IBM has announced several new partnerships which aim to take things even further, and put its cognitive capabilities to use solving a whole new range of problems around the world.",
+                "topic": "coding",
+                "article_img_url": "https://images.pexels.com/photos/373543/pexels-photo-373543.jpeg?w=700&h=700 (OPTIONAL)",
+                "created_at": "2020-10-11T11:24:00.000Z",
+                "votes": 0,
+                "comment_count": 0
+            }
+        },
+        "exampleRequest": {
+            "author": "jessjelly",
+            "title": "The Rise Of Thinking Machines: How IBM's Watson Takes On The World",
+            "body": "Many people know Watson as the IBM-developed cognitive super computer that won the Jeopardy! gameshow in 2011. In truth, Watson is not actually a computer but a set of algorithms and APIs, and since winning TV fame (and a $1 million prize) IBM has put it to use tackling tough problems in every industry from healthcare to finance. Most recently, IBM has announced several new partnerships which aim to take things even further, and put its cognitive capabilities to use solving a whole new range of problems around the world.",
+            "topic": "coding",
+            "article_img_url": "https://images.pexels.com/photos/373543/pexels-photo-373543.jpeg?w=700&h=700"
+        }
+    },
     "GET /api/articles/:article_id": {
         "description": "serves a single article by id",
         "queries": [],
@@ -46,12 +73,13 @@
                 "body": "This is part two of a series on how to get up and running with Systemd and Node.js. This part dives deeper into how to successfully run your app with systemd long-term, and how to set it up in a production environment.",
                 "created_at": 1604728980000,
                 "votes": 0,
-                "article_img_url": "https://images.pexels.com/photos/11035380/pexels-photo-11035380.jpeg?w=700&h=700"
+                "article_img_url": "https://images.pexels.com/photos/11035380/pexels-photo-11035380.jpeg?w=700&h=700",
+                "comment_count":18
             }
         }
     },
     "PATCH /api/articles/:article_id": {
-        "description": "serves an array of all users",
+        "description": "increments or decrement the votes of a single article",
         "queries": [],
         "format": "json",
         "exampleResponse": {
@@ -90,21 +118,20 @@
             ]
         }
     },
+
     "POST /api/articles/:article_id/comments": {
         "description": "creates a new comment to given article id",
         "queries": [],
         "format": "json",
         "exampleResponse": {
-            "comments": [
-                {
-                    "comment_id": 2,
-                    "body": "The beautiful thing about treasure is that it exists. Got to find out what kind of sheets these are; not cotton, not rayon, silky.",
-                    "article_id": 1,
-                    "author": "butter_bridge",
-                    "votes": 0,
-                    "created_at": "2023-11-23T12: 30: 00.000Z"
-                }
-            ]
+            "comment": {
+                "comment_id": 2,
+                "body": "The beautiful thing about treasure is that it exists. Got to find out what kind of sheets these are; not cotton, not rayon, silky.",
+                "article_id": 1,
+                "author": "butter_bridge",
+                "votes": 0,
+                "created_at": "2023-11-23T12: 30: 00.000Z"
+            }
         },
         "exampleRequest": {
             "username": "butter_bridge",
@@ -123,6 +150,42 @@
                     "avatar_url": "https://vignette.wikia.nocookie.net/mrmen/images/d/d6/Mr-Tickle-9a.png/revision/latest?cb=20180127221953"
                 }
             ]
+        }
+    },
+    "PATCH /api/comments/:comment_id": {
+        "description": "increments or decrement the votes of a single comment",
+        "queries": [],
+        "format": "json",
+        "exampleResponse": {
+            "comment": {
+                "comment_id": 2,
+                "body": "The beautiful thing about treasure is that it exists. Got to find out what kind of sheets these are; not cotton, not rayon, silky.",
+                "article_id": 1,
+                "author": "butter_bridge",
+                "votes": 1,
+                "created_at": "2023-11-23T12: 30: 00.000Z"
+            }
+        },
+        "exampleRequest": {
+            "inc_votes": 1
+        }
+    },
+    "DELETE /api/comments/:comment_id": {
+        "description": "delete the given comment by comment_id",
+        "queries": [],
+        "format": "json",
+        "exampleResponse": {}
+    },
+    "GET /api/users/:username": {
+        "description": "serves an single user by username",
+        "queries": [],
+        "format": "json",
+        "exampleResponse": {
+            "user": {
+                "username": "tickle122",
+                "name": "Tom Tickle",
+                "avatar_url": "https://vignette.wikia.nocookie.net/mrmen/images/d/d6/Mr-Tickle-9a.png/revision/latest?cb=20180127221953"
+            }            
         }
     }
 }

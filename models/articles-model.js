@@ -3,6 +3,7 @@ const topicsModel = require("../models/topics-model");
 const usersModel = require("../models/users-model");
 
 const badRequest = { status: 400, msg: "Bad request" };
+const notFound = { status: 404, msg: "article does not exist" };
 
 exports.getArticles = ({ topic, sort_by, order, ...invalidQuery }) => {
     if (Object.keys(invalidQuery).length || Array.isArray(topic)) return Promise.reject(badRequest);
@@ -20,16 +21,9 @@ exports.getArticles = ({ topic, sort_by, order, ...invalidQuery }) => {
 
     const orderStatement = `ORDER BY ${sorts.map((col, index) => `${col} ${orders?.[index] ?? "DESC"}`)}`; //DESC is default value for any column when sorting
     const selectStatement =
-        `SELECT 
-        article_id,
-        author,
-        title,
-        topic,
-        created_at,
-        votes,
-        article_img_url,
-        (SELECT COUNT(1) FROM comments c WHERE c.article_id = article_id)::INT comment_count
-    FROM articles`;
+        `SELECT article_id, author, title, topic, created_at, votes, article_img_url,
+            (SELECT COUNT(1) FROM comments c WHERE c.article_id = article_id)::INT comment_count
+        FROM articles`;
 
     if (topic != null) {
         const whereStatement = "WHERE topic = $1";
@@ -44,22 +38,27 @@ exports.getArticles = ({ topic, sort_by, order, ...invalidQuery }) => {
 
 exports.getArticle = (id) => db
     .query(
-        `SELECT a.*,
-            (SELECT COUNT (1) FROM comments c WHERE c.article_id = a.article_id)::INT comment_count
-        FROM articles a
-        WHERE a.article_id = $1`, [id])
-    .then(({ rows }) => rows.length ? rows[0] : Promise.reject({ status: 404, msg: "article does not exist" }));
+        `SELECT *,
+            (SELECT COUNT (1) FROM comments c WHERE c.article_id = article_id)::INT comment_count
+        FROM articles
+        WHERE article_id = $1`, [id])
+    .then(({ rows }) => rows.length ? rows[0] : Promise.reject(notFound));
 
 exports.modifyArticle = (id, { inc_votes, ...partialArticle }) => {
-    if (Object.keys(partialArticle).length) return Promise.reject({ status: 400, msg: "Bad request" });
+    if (Object.keys(partialArticle).length) return Promise.reject(badRequest);
 
     return db
-        .query(`UPDATE articles SET votes = (votes + $2) WHERE article_id = $1 RETURNING *`, [id, inc_votes])
-        .then(({ rows }) => rows.length ? rows[0] : Promise.reject({ status: 404, msg: "article does not exist" }));
+        .query(`
+            UPDATE articles
+            SET votes = (votes + $2)
+            WHERE article_id = $1
+            RETURNING *, (SELECT COUNT (1) FROM comments c WHERE c.article_id = article_id)::INT comment_count
+        `, [id, inc_votes])
+        .then(({ rows }) => rows.length ? rows[0] : Promise.reject(notFound));
 };
 
 exports.createArticle = ({ author, title, body, topic, article_img_url, ...invalidKeys }) => {
-    if (Object.keys(invalidKeys).length || (author == null) || (topic == null)) return Promise.reject({ status: 400, msg: "Bad request" }); //Null checks to avoid not found
+    if (Object.keys(invalidKeys).length || (author == null) || (topic == null)) return Promise.reject(badRequest); //Null checks to avoid not found
 
     const [columns, params, values] = Object
         .entries({ author, title, body, topic, ...article_img_url && { article_img_url } })
@@ -68,14 +67,6 @@ exports.createArticle = ({ author, title, body, topic, article_img_url, ...inval
     return Promise
         .all([topicsModel.getTopic(topic), usersModel.getUser(author)])
         .catch(err => Promise.reject(err.status === 404 ? { status: 422, msg: "Unprocessable Entity" } : err))
-        .then(() => db.query(
-            `INSERT INTO articles (${columns}) VALUES (${params}) RETURNING *, 0 comment_count`, values))
+        .then(() => db.query(`INSERT INTO articles (${columns}) VALUES (${params}) RETURNING *, 0 comment_count`, values))
         .then(({ rows }) => rows[0]);
-
-    // return Promise.all([topicsModel.getTopic(topic), usersModel.getUser(author)])
-    //     .then(() => db.query(
-    //         `INSERT INTO articles (author, title, body, topic, article_img_url)
-    //         VALUES ($1, $2, $3, $4, $5)
-    //         RETURNING *`, [author, title, body, topic, article_img_url]))
-    //     .then(({ rows }) => rows[0]);
 }

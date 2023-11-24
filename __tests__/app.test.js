@@ -330,6 +330,93 @@ describe("/api/articles/:article_id/comments", () => {
             .get("/api/articles/1/comments")
             .expect(200)
             .then(({ body }) => {
+                expect(body.msg).toBe("article does not exist");
+            });
+    });
+    test("GET:400 sends an appropriate status and error message when given an invalid id", () => {
+        return request(app)
+            .get("/api/articles/not-a-article")
+            .expect(400)
+            .then(({ body }) => {
+                expect(body.msg).toBe("Bad request");
+            });
+    });
+    describe("PATCH:200 updates an article by id", () => {
+        test("When given an object with property inc_votes will increment the votes", () => {
+            return request(app)
+                .patch("/api/articles/1")
+                .send({ inc_votes: 1 })
+                .expect(200)
+                .then(({ body }) => expect(body.article).toMatchObject({ votes: 101 }));
+        });
+        test("When given an object with property inc_votes negative will decrement the votes", () => {
+            return request(app)
+                .patch("/api/articles/1")
+                .send({ inc_votes: -100 })
+                .expect(200)
+                .then(({ body }) => expect(body.article).toMatchObject({ votes: 0 }));
+        });
+        test("When given an object with property inc_votes negative will decrement the votes allowing negative numbers", () => {
+            return request(app)
+                .patch("/api/articles/1")
+                .send({ inc_votes: -200 })
+                .expect(200)
+                .then(({ body }) => expect(body.article).toMatchObject({ votes: -100 }));
+        });
+        test("Should not modify the other properties", () => {
+            return request(app)
+                .patch("/api/articles/1")
+                .send({ inc_votes: 0 })
+                .expect(200)
+                .then(({ body }) => expect(body.article).toMatchObject({
+                    article_id: 1,
+                    author: "butter_bridge",
+                    title: "Living in the shadow of a great man",
+                    body: "I find this existence challenging",
+                    topic: "mitch",
+                    created_at: "2020-07-09T20:11:00.000Z",
+                    votes: 100,
+                    article_img_url: "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700"
+                }));
+        });
+    });
+    test("PATCH:404 sends an appropriate status and error message when given a valid but non-existent id", () => {
+        return request(app)
+            .patch("/api/articles/999")
+            .send({ inc_votes: 1 })
+            .expect(404)
+            .then(({ body }) => expect(body.msg).toBe("article does not exist"));
+    });
+    describe("PATCH:400 sends an appropriate status and error message", () => {
+        test("When given an invalid id", () => {
+            return request(app)
+                .patch("/api/articles/not-a-article")
+                .send({ inc_votes: 1 })
+                .expect(400)
+                .then(({ body }) => expect(body.msg).toBe("Bad request"));
+        });
+        test("When given body is not valid", () => {
+            return request(app)
+                .patch("/api/articles/1")
+                .send({ msg: "hi" })
+                .expect(400)
+                .then(({ body }) => expect(body.msg).toBe("Bad request"));
+        });
+        test("When body is empty", () => {
+            return request(app)
+                .patch("/api/articles/1")
+                .expect(400)
+                .then(({ body }) => expect(body.msg).toBe("Bad request"));
+        });
+    });
+});
+
+describe("/api/articles/:article_id/comments", () => {
+    test("GET:200 sends an array of comments for an article to the client", () => {
+        return request(app)
+            .get("/api/articles/1/comments")
+            .expect(200)
+            .then(({ body }) => {
                 expect(body.comments.length).toBe(11);
                 body.comments.forEach(comment => {
                     expect(comment).toMatchObject({
@@ -349,7 +436,7 @@ describe("/api/articles/:article_id/comments", () => {
             .expect(200)
             .then(({ body }) => expect(body.comments).toEqual([]));
     });
-    test("GET:404 sends an appropriate status and error message when given a valid but non-existent article_id", () => {
+    test("GET:404 sends an appropriate status and error message when given a valid but non-existent article_id", () => {==
         return request(app)
             .get("/api/articles/999/comments")
             .expect(404)
@@ -390,7 +477,7 @@ describe("/api/articles/:article_id/comments", () => {
                 .post("/api/articles/1/comments")
                 .send({ username: "not_a_user", body: "test" })
                 .expect(404)
-                .then(({ body }) => expect(body.msg).toBe("username does not exist"));
+                .then(({ body }) => expect(body.msg).toBe("user does not exist"));
         });
     });
     describe("POST:400 sends an appropriate status and error message", () => {
@@ -452,5 +539,28 @@ describe("/api/comments/:comment_id", () => {
             .delete("/api/comments/999")
             .expect(404)
             .then(({ body }) => expect(body.msg).toBe("comment does not exist"));
+    });
+});
+
+describe("/api/users/:username", () => {
+    test("GET:200 sends a single user to the client", () => {
+        return request(app)
+            .get("/api/users/butter_bridge")
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.user).toMatchObject({
+                    username: "butter_bridge",
+                    name: "jonny",
+                    avatar_url: "https://www.healthytherapies.com/wp-content/uploads/2016/06/Lime3.jpg"
+                })
+            });
+    });
+    test('GET:404 sends an appropriate status and error message when given a valid but non-existent id', () => {
+        return request(app)
+            .get('/api/users/user')
+            .expect(404)
+            .then(({ body }) => {
+                expect(body.msg).toBe("user does not exist");
+            });
     });
 });

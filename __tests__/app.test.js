@@ -352,3 +352,72 @@ describe("/api/users", () => {
             });
     });
 });
+
+describe("/api/comments/:comment_id", () => {
+    describe("PATCH:200 updates a comment by id", () => {
+        test("When given an object with property inc_votes will increment the votes", () => {
+            return request(app)
+                .patch("/api/comments/1")
+                .send({ inc_votes: 1 })
+                .expect(200)
+                .then(({ body }) => expect(body.comment).toMatchObject({ votes: 17 }));
+        });
+        test("When given an object with property inc_votes negative will decrement the votes", () => {
+            return request(app)
+                .patch("/api/comments/1")
+                .send({ inc_votes: -1 })
+                .expect(200)
+                .then(({ body }) => expect(body.comment).toMatchObject({ votes: 15 }));
+        });
+        test("When given an object with property inc_votes negative will decrement the votes allowing negative numbers", () => {
+            return request(app)
+                .patch("/api/comments/1")
+                .send({ inc_votes: -20 })
+                .expect(200)
+                .then(({ body }) => expect(body.comment).toMatchObject({ votes: -4 }));
+        });
+        test("Should not modify the other properties", () => {
+            return request(app)
+                .patch("/api/comments/1")
+                .send({ inc_votes: 0 })
+                .expect(200)
+                .then(({ body }) => expect(body.comment).toMatchObject({
+                    comment_id: 1,
+                    body: "Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!",
+                    article_id: 9,
+                    author: "butter_bridge",
+                    votes: 16,
+                    created_at: "2020-04-06T12:17:00.000Z",
+                }));
+        });
+    });
+    test("PATCH:404 sends an appropriate status and error message when given a valid but non-existent id", () => {
+        return request(app)
+            .patch("/api/comments/999")
+            .send({ inc_votes: 1 })
+            .expect(404)
+            .then(({ body }) => expect(body.msg).toBe("comment does not exist"));
+    });
+    describe("PATCH:400 sends an appropriate status and error message", () => {
+        test("When given an invalid id", () => {
+            return request(app)
+                .patch("/api/comments/not-a-comment")
+                .send({ inc_votes: 1 })
+                .expect(400)
+                .then(({ body }) => expect(body.msg).toBe("Bad request"));
+        });
+        test("When given body is not valid", () => {
+            return request(app)
+                .patch("/api/comments/1")
+                .send({ msg: "hi" })
+                .expect(400)
+                .then(({ body }) => expect(body.msg).toBe("Bad request"));
+        });
+        test("When body is empty", () => {
+            return request(app)
+                .patch("/api/comments/1")
+                .expect(400)
+                .then(({ body }) => expect(body.msg).toBe("Bad request"));
+        });
+    });
+});

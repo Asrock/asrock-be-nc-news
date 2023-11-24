@@ -4,6 +4,7 @@ const { getEndpointsInfo } = require("./controllers/api-controller");
 const { getTopics } = require("./controllers/topics-controller");
 const { getArticle, getArticles, patchArticle, getArticleComments, postArticleComment } = require('./controllers/articles-controller');
 const { getUsers } = require("./controllers/users-controller");
+const { patchComment } = require("./controllers/comments-controller");
 
 const app = express();
 
@@ -18,6 +19,8 @@ app.get('/api/articles/:article_id', getArticle);
 app.patch('/api/articles/:article_id', patchArticle);
 app.get('/api/articles/:article_id/comments', getArticleComments);
 app.post('/api/articles/:article_id/comments', postArticleComment);
+
+app.patch("/api/comments/:comment_id", patchComment);
 
 app.use(apiErrorHandler);
 app.use(sqlErrorHandler);

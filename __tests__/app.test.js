@@ -138,6 +138,82 @@ describe("/api/articles", () => {
                 .then(({ body }) => expect(body.msg).toBe("Bad request"));
         });
     });
+
+    describe("/api/articles?sort=&order=    FEATURE REQUEST ", () => {
+        describe("GET:200 sends a sorted/ordered array of articles", () => {
+            test("When given order set default column to created_at", () => {
+                return request(app)
+                    .get("/api/articles?order=asc")
+                    .expect(200)
+                    .then(({ body }) => expect(body.articles).toBeSortedBy("created_at", { ascending: true }));
+            });
+            test("When given sort column set default order to desc", () => {
+                return request(app)
+                    .get("/api/articles?sort_by=title")
+                    .expect(200)
+                    .then(({ body }) => expect(body.articles).toBeSortedBy("title", { descending: true }));
+            });
+            test("When given column and order", () => {
+                return request(app)
+                    .get("/api/articles?sort_by=title&order=asc")
+                    .expect(200)
+                    .then(({ body }) => expect(body.articles).toBeSortedBy("title", { ascending: true }));
+            });
+            test("When given more than two columns and equal or less orders", () => {
+                return request(app)
+                    .get("/api/articles?sort_by=title&order=asc&sort_by=author&order=desc")
+                    .expect(200)
+                    .then(({ body }) => {
+                        const ref = body.articles.map(article => article);
+                        const opts = ['en', { numeric: true }];
+                        const sorted = body.articles.sort((a, b) => a.title.localeCompare(b.title, ...opts) || b.author.localeCompare(a.author, ...opts));
+                        expect(sorted).toEqual(ref)
+                    });
+            });
+            test("Should be compatible with other queries", () => {
+                return request(app)
+                    .get("/api/articles?sort_by=title&order=asc&sort_by=author&topic=mitch")
+                    .expect(200)
+                    .then(({ body }) => {
+                        const ref = body.articles.map(article => article);
+                        const opts = ['en', { numeric: true }];
+                        const sorted = body.articles.sort((a, b) => a.title.localeCompare(b.title, ...opts) || b.author.localeCompare(a.author, ...opts));
+                        expect(sorted).toEqual(ref)
+                    });
+            });
+            test("Should be compatible with other queries when using same column names", () => {
+                return request(app)
+                    .get("/api/articles?sort_by=topic&order=asc&sort_by=author&topic=mitch")
+                    .expect(200)
+                    .then(({ body }) => {
+                        const ref = body.articles.map(article => article);
+                        const opts = ['en', { numeric: true }];
+                        const sorted = body.articles.sort((a, b) => a.topic.localeCompare(b.topic, ...opts) || b.author.localeCompare(a.author, ...opts));
+                        expect(sorted).toEqual(ref)
+                    });
+            });
+        });
+        describe("GET:400 sends an appropriate status and error message when given invalid sort/order query parameters", () => {
+            test("When sort_by has duplicated values", () => {
+                return request(app)
+                    .get("/api/articles?sort_by=title&sort_by=title")
+                    .expect(400)
+                    .then(({ body }) => expect(body.msg).toBe("Bad request"));
+            });
+            test("When sort_by is set and order is not paired with sort_by", () => {
+                return request(app)
+                    .get("/api/articles?sort_by=title&order=asc&order=desc")
+                    .expect(400)
+                    .then(({ body }) => expect(body.msg).toBe("Bad request"));
+            });
+            test("When sort_by is not one of the columns", () => {
+                return request(app)
+                    .get("/api/articles?sort_by=not_a_column")
+                    .expect(400)
+                    .then(({ body }) => expect(body.msg).toBe("Bad request"));
+            });
+        });
+    });
 });
 
 describe("/api/articles/:article_id", () => {

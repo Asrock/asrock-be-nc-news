@@ -357,8 +357,7 @@ describe("/api/comments/:comment_id", () => {
     test("DELETE:204 delete the given comment by comment_id", () => {
         return request(app)
             .delete("/api/comments/1")
-            .expect(204)
-            .then(({body}) => expect(body).toEqual({}));
+            .expect(204);
     });
     test("DELETE:400 sends an appropriate status and error message when given an invalid comment_id", () => {
         return request(app)

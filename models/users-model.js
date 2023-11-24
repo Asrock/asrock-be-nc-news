@@ -6,4 +6,4 @@ exports.getUsers = () => db
 
 exports.getUser = (username) => db
     .query("SELECT * FROM users WHERE username = $1", [username])
-    .then(({ rows }) => rows.length ? rows[0] : Promise.reject({status:404, msg:"user does not exists"}));
+    .then(({ rows }) => rows.length ? rows[0] : Promise.reject({status:404, msg:"user does not exist"}));

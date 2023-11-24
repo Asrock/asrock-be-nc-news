@@ -532,6 +532,76 @@ describe("/api/articles/:article_id/comments", () => {
                 .then(({ body }) => expect(body.msg).toBe("Bad request"));
         });
     });
+    describe("GET:200 sends an array of comments for an article to the client using pagination", () => {
+        test("Should return the same columns when given query limit and p (page)", () => {
+            return request(app)
+                .get("/api/articles/1/comments?p=1&limit=3")
+                .expect(200)
+                .then(({ body }) => {
+                    expect(body.comments.length).toBe(3);
+                    body.comments.forEach(comment => {
+                        expect(comment).toMatchObject({
+                            comment_id: expect.any(Number),
+                            votes: expect.any(Number),
+                            created_at: expect.any(String),
+                            author: expect.any(String),
+                            body: expect.any(String),
+                            article_id: expect.any(Number)
+                        });
+                    });
+                });
+        });
+        test("Should return the results based on the limit and page", () => {
+            return request(app)
+                .get("/api/articles/1/comments?p=3&limit=2")
+                .expect(200)
+                .then(({ body }) => {
+                    expect(body.comments.length).toBe(2);
+                    expect(body.comments).toMatchObject([{ comment_id: 6 }, { comment_id: 7 }])
+                });
+        });
+        test("When p is set and limit does not have value, limit defaults to 10", () => {
+            return request(app)
+                .get("/api/articles/1/comments?p=2")
+                .expect(200)
+                .then(({ body }) => {
+                    expect(body.comments.length).toBe(1);
+                    expect(body.comments).toMatchObject([{ comment_id: 18 }])
+                });
+        });        
+        test("When given page is empty should return empty array", () => {
+            return request(app)
+                .get("/api/articles/1/comments?p=200")
+                .expect(200)
+                .then(({ body }) => expect(body.comments).toEqual([]));
+        });
+    });
+    describe("GET:400 sends an appropriate status and error message using pagination", () => {
+        test("When given an invalid value to parameter p", () => {
+            return request(app)
+                .get("/api/articles/1/comments?p=not_a_number")
+                .expect(400)
+                .then(({ body }) => expect(body.msg).toBe("Bad request"));
+        });
+        test("When given an invalid value to parameter limit", () => {
+            return request(app)
+                .get("/api/articles/1/comments?limit=not_a_number")
+                .expect(400)
+                .then(({ body }) => expect(body.msg).toBe("Bad request"));
+        });
+        test("When given limit has value of 0", () => {
+            return request(app)
+                .get("/api/articles/1/comments?limit=0")
+                .expect(400)
+                .then(({ body }) => expect(body.msg).toBe("Bad request"));
+        });
+        test("When given page has value of 0", () => {
+            return request(app)
+                .get("/api/articles/1/comments?p=0")
+                .expect(400)
+                .then(({ body }) => expect(body.msg).toBe("Bad request"));
+        });
+    });
 });
 
 describe("/api/comments/:comment_id", () => {

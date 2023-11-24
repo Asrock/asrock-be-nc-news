@@ -2,9 +2,13 @@ const db = require("../db/connection");
 const articlesModel = require("./articles-model");
 const usersModel = require("../models/users-model");
 
-exports.getComments = ({ article_id }) => {
+exports.getComments = ({ article_id }, { p, limit }) => {
+    if(+limit === 0 || +p === 0) return Promise.reject({ status: 400, msg: "Bad request" });
+
+    const offset = p ? (p * (limit ??= 10) - limit) : 0;
+
     return Promise.all([
-        db.query(`SELECT * FROM comments WHERE article_id = $1`, [article_id]),
+        db.query(`SELECT * FROM comments WHERE article_id = $1 LIMIT $2 OFFSET $3`, [article_id, limit, offset]),
         articlesModel.getArticle(article_id)
     ]).then(([{ rows }]) => rows);
 }

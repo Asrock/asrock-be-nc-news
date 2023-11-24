@@ -5,3 +5,9 @@ exports.patchComment = (req, res, next) => {
         .then((comment) => res.status(200).send({ comment }))
         .catch(next);
 };
+
+exports.deleteComment = (req, res, next) => {
+    return commentsModel.deleteComment(req.params.comment_id)
+        .then(() => res.status(204).send())
+        .catch(next);
+};

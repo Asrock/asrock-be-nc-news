@@ -15,7 +15,9 @@
     "GET /api/articles": {
         "description": "serves an array of all articles",
         "queries": [
-            "topic"
+            "topic",
+            "sort_by",
+            "order"
         ],
         "format": "json",
         "exampleResponse": {
@@ -46,7 +48,8 @@
                 "body": "This is part two of a series on how to get up and running with Systemd and Node.js. This part dives deeper into how to successfully run your app with systemd long-term, and how to set it up in a production environment.",
                 "created_at": 1604728980000,
                 "votes": 0,
-                "article_img_url": "https://images.pexels.com/photos/11035380/pexels-photo-11035380.jpeg?w=700&h=700"
+                "article_img_url": "https://images.pexels.com/photos/11035380/pexels-photo-11035380.jpeg?w=700&h=700",
+                "comment_count":18
             }
         }
     },
@@ -87,6 +90,7 @@
             ]
         }
     },
+
     "POST /api/articles/:article_id/comments": {
         "description": "creates a new comment to given article id",
         "queries": [],
@@ -138,6 +142,24 @@
         },
         "exampleRequest": {
             "inc_votes": 1
+        }
+    },
+    "DELETE /api/comments/:comment_id": {
+        "description": "delete the given comment by comment_id",
+        "queries": [],
+        "format": "json",
+        "exampleResponse": {}
+    },
+    "GET /api/users/:username": {
+        "description": "serves an single user by username",
+        "queries": [],
+        "format": "json",
+        "exampleResponse": {
+            "user": {
+                "username": "tickle122",
+                "name": "Tom Tickle",
+                "avatar_url": "https://vignette.wikia.nocookie.net/mrmen/images/d/d6/Mr-Tickle-9a.png/revision/latest?cb=20180127221953"
+            }            
         }
     }
 }

@@ -25,6 +25,12 @@ exports.postArticle = (req, res, next) => {
         .catch(next);
 };
 
+exports.deleteArticle = (req, res, next) => {
+    return articlesModel.deleteArticle(req.params.article_id)
+        .then(() => res.status(204).send())
+        .catch(next);
+};
+
 exports.getArticleComments = (req, res, next) => {
     return commentsModel.getComments(req.params, req.query)
         .then(comments => res.status(200).send({ comments }))

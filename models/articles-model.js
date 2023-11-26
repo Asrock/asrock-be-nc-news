@@ -70,3 +70,8 @@ exports.createArticle = ({ author, title, body, topic, article_img_url, ...inval
         .then(() => db.query(`INSERT INTO articles (${columns}) VALUES (${params}) RETURNING *, 0 comment_count`, values))
         .then(({ rows }) => rows[0]);
 }
+
+exports.deleteArticle = (id) => db
+    .query(`WITH deletedComments AS (DELETE FROM comments WHERE article_id = $1 RETURNING article_id)
+        DELETE FROM articles WHERE article_id in (SELECT * FROM deletedComments)`, [id])
+    .then(({ rowCount }) => rowCount || Promise.reject(notFound));

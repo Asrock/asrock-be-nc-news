@@ -3,7 +3,7 @@ const commentsModel = require("../models/comments-model");
 
 exports.getArticles = (req, res, next) => {
     return articlesModel.getArticles(req.query)
-        .then(articles => res.status(200).send({ articles }))
+        .then(articles => res.status(200).send(articles))
         .catch(next);
 };
 

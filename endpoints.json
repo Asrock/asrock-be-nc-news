@@ -207,6 +207,12 @@
             "inc_votes": 1
         }
     },
+    "DELETE /api/articles/:article_id": {
+        "description": "deletes the given article and all the associated comments",
+        "queries": [],
+        "format": "json",
+        "exampleResponse": {}
+    },
     "GET /api/articles/:article_id/comments": {
         "description": "serves an array of comments by article id",
         "queries": [
@@ -279,7 +285,7 @@
         }
     },
     "DELETE /api/comments/:comment_id": {
-        "description": "delete the given comment by comment_id",
+        "description": "deletes the given comment",
         "queries": [],
         "format": "json",
         "exampleResponse": {}

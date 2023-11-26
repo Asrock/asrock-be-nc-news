@@ -571,6 +571,32 @@ describe("/api/articles/:article_id", () => {
             });
         });
     });
+    describe("DELETE", () => {
+        test("DELETE:204 deletes the given article by article_id", () => {
+            return request(app)
+                .delete("/api/articles/1")
+                .expect(204);
+        });
+        test("DELETE:204 should also delete associated comments", () => {
+            return request(app)
+                .delete("/api/articles/1")
+                .expect(204)
+                .then(() => db.query("SELECT COUNT(1)::INT FROM comments WHERE article_id = 1"))
+                .then(({ rows: [{ count }] }) => expect(count).toBe(0));
+        });
+        test("DELETE:400 sends an appropriate status and error message when given an invalid article_id", () => {
+            return request(app)
+                .delete("/api/articles/not_a_article_id")
+                .expect(400)
+                .then(({ body }) => expect(body.msg).toBe("Bad request"));
+        });
+        test("DELETE:404 sends an unappropriate status and error message when given a non existent article_id", () => {
+            return request(app)
+                .delete("/api/articles/999")
+                .expect(404)
+                .then(({ body }) => expect(body.msg).toBe("article does not exist"));
+        });
+    });
 });
 
 describe("/api/articles/:article_id/comments", () => {

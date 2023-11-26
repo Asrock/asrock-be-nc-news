@@ -39,19 +39,60 @@ describe("/api", () => {
 });
 
 describe("/api/topics", () => {
-    test("GET:200 sends an array of topics to the client", () => {
-        return request(app)
-            .get("/api/topics")
-            .expect(200)
-            .then(({ body }) => {
-                expect(body.topics.length).toBe(3);
-                body.topics.forEach(topic => {
-                    expect(topic).toMatchObject({
-                        slug: expect.any(String),
-                        description: expect.any(String)
+    describe("GET", () => {
+        test("GET:200 sends an array of topics to the client", () => {
+            return request(app)
+                .get("/api/topics")
+                .expect(200)
+                .then(({ body }) => {
+                    expect(body.topics.length).toBe(3);
+                    body.topics.forEach(topic => {
+                        expect(topic).toMatchObject({
+                            slug: expect.any(String),
+                            description: expect.any(String)
+                        });
                     });
                 });
+        });
+    });
+    describe("POST", () => {
+        test("POST:201 creates a new topic", () => {
+            return request(app)
+                .post("/api/topics")
+                .send({ slug: "football", description: "Footie!" })
+                .expect(201)
+                .then(({ body }) => expect(body.topic).toMatchObject({ slug: "football", description: "Footie!" }));
+        });        
+        describe("POST:400 sends an appropriate status and error message", () => {
+            test("When given an invalid slug", () => {
+                return request(app)
+                    .post("/api/topics")
+                    .send({ slug: null, body: "test" })
+                    .expect(400)
+                    .then(({ body }) => expect(body.msg).toBe("Bad request"));
             });
+            test("When given an invalid request body", () => {
+                return request(app)
+                    .post("/api/topics")
+                    .send({ msg: "hi" })
+                    .expect(400)
+                    .then(({ body }) => expect(body.msg).toBe("Bad request"));
+            });
+            test("When no request body is given", () => {
+                return request(app)
+                    .post("/api/topics")
+                    .expect(400)
+                    .then(({ body }) => expect(body.msg).toBe("Bad request"));
+            });
+        });
+        //TODO - TO BE CHANGED
+        test("POST:400 sends an appropriate status and error message when topic already exists", () => {
+            return request(app)
+                .post("/api/topics")
+                .send({ slug: "mitch", description: "The man, the Mitch, the legend" })
+                .expect(400)
+                .then(({ body }) => expect(body.msg).toBe("Bad request"));
+        });
     });
 });
 

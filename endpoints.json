@@ -12,6 +12,21 @@
             ]
         }
     },
+    "POST /api/topics": {
+        "description": "creates a new topic",
+        "queries": [],
+        "format": "json",
+        "exampleRequest": {
+            "slug": "football",
+            "description": "Footie!"
+        },
+        "exampleResponse": {
+            "topic": {
+                "slug": "football",
+                "description": "Footie!"
+            }
+        }
+    },
     "GET /api/articles": {
         "description": "serves an array of all articles",
         "queries": [

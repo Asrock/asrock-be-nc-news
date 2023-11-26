@@ -1,7 +1,7 @@
 const express = require("express");
 const { errorHandler, apiErrorHandler, sqlErrorHandler } = require("./errors-handler");
 const { getEndpointsInfo } = require("./controllers/api-controller");
-const { getTopics } = require("./controllers/topics-controller");
+const { getTopics, postTopic } = require("./controllers/topics-controller");
 const { getArticle, getArticles, patchArticle, getArticleComments, postArticleComment, postArticle } = require("./controllers/articles-controller");
 const { getUsers, getUser } = require("./controllers/users-controller");
 const { deleteComment } = require("./controllers/comments-controller");
@@ -13,7 +13,7 @@ app.use(express.json());
 
 app.get("/api", getEndpointsInfo);
 app.get("/api/topics", getTopics);
-
+app.post("/api/topics", postTopic);
 app.get("/api/users", getUsers);
 app.get("/api/users/:username", getUser);
 

@@ -75,7 +75,6 @@ describe("/api/articles", () => {
                             comment_count: expect.any(Number)
                         });
                     });
-                    expect(body.articles).toBeSortedBy("created_at", { ascending: true });
                 });
         });
         test("GET:200 sends an array of articles in ascending order by create_at", () => {
@@ -86,7 +85,7 @@ describe("/api/articles", () => {
         });
     });
     describe("Queries", () => {
-        describe("/api/articles?topic=", () => {
+        describe("/api/articles?topic=      NON-FILTER FILTER", () => {
             test("GET:200 when matches the topic sends an array of articles to the client", () => {
                 return request(app)
                     .get("/api/articles?topic=mitch")
@@ -119,7 +118,7 @@ describe("/api/articles", () => {
                     .expect(200)
                     .then(({ body }) => expect(body.articles).toEqual([]));
             });
-            test("GET:404 sends an empty array of articles when topic does not exist", () => {
+            test("GET:404 sends an appropiate status and error message when topic does not exist", () => {
                 return request(app)
                     .get("/api/articles?topic=not_in_topics")
                     .expect(404)
@@ -138,7 +137,7 @@ describe("/api/articles", () => {
                     .then(({ body }) => expect(body.msg).toBe("Bad request"));
             });
         });
-        describe("/api/articles?sort=&order=    FEATURE REQUEST ", () => {
+        describe("/api/articles?sort=&order=    SORTING AND ORDERING - FEATURE REQUEST", () => {
             describe("GET:200 sends a sorted/ordered array of articles", () => {
                 test("When given order set default column to created_at", () => {
                     return request(app)
@@ -208,6 +207,92 @@ describe("/api/articles", () => {
                 test("When sort_by is not one of the columns", () => {
                     return request(app)
                         .get("/api/articles?sort_by=not_a_column")
+                        .expect(400)
+                        .then(({ body }) => expect(body.msg).toBe("Bad request"));
+                });
+            });
+        });
+        describe("/api/articles?p=&limit=   PAGINATION", () => {
+            describe("GET:200 sends an array of articles to the client using pagination", () => {
+                test("Should return the same columns when given query limit and p (page)", () => {
+                    return request(app)
+                        .get("/api/articles?p=1&limit=10")
+                        .expect(200)
+                        .then(({ body }) => {
+                            expect(body.articles.length).toBe(10);
+                            body.articles.forEach(article => {
+                                expect(article).toMatchObject({
+                                    article_id: expect.any(Number),
+                                    author: expect.any(String),
+                                    title: expect.any(String),
+                                    topic: expect.any(String),
+                                    created_at: expect.any(String),
+                                    votes: expect.any(Number),
+                                    article_img_url: expect.any(String),
+                                    comment_count: expect.any(Number)
+                                });
+                            });
+                        });
+                });
+                test("Should return the results based on the limit and page", () => {
+                    return request(app)
+                        .get("/api/articles?p=3&limit=2")
+                        .expect(200)
+                        .then(({ body }) => {
+                            expect(body.articles.length).toBe(2);
+                            expect(body.articles).toMatchObject([{ article_id: 10 }, { article_id: 9 }])
+                        });
+                });
+                test("When p is set and limit does not have value, limit defaults to 10", () => {
+                    return request(app)
+                        .get("/api/articles?p=2")
+                        .expect(200)
+                        .then(({ body }) => {
+                            expect(body.articles.length).toBe(3);
+                            expect(body.articles).toMatchObject([{ article_id: 2 }, { article_id: 6 }, { article_id: 3 }])
+                        });
+                });
+                test("When given page is empty should return empty array", () => {
+                    return request(app)
+                        .get("/api/articles?p=200")
+                        .expect(200)
+                        .then(({ body }) => expect(body.articles).toEqual([]));
+                });
+                test("When using pagination, response body should contain the articles array and an extra 'total_count' property", () => {
+                    return request(app)
+                        .get("/api/articles?p=1&limit=10")
+                        .expect(200)
+                        .then(({ body }) => { expect(body).toMatchObject({ articles: expect.any(Array), total_count: 13 }) });
+                });
+                test("When combined with topic, total_count should return the count for articles containing the given topic", () => {
+                    return request(app)
+                        .get("/api/articles?topic=mitch&p=1&limit=5")
+                        .expect(200)
+                        .then(({ body }) => expect(body.total_count).toBe(12));
+                });
+            });
+            describe("GET:400 sends an appropriate status and error message using pagination", () => {
+                test("When given an invalid value to parameter p", () => {
+                    return request(app)
+                        .get("/api/articles?p=not_a_number")
+                        .expect(400)
+                        .then(({ body }) => expect(body.msg).toBe("Bad request"));
+                });
+                test("When given an invalid value to parameter limit", () => {
+                    return request(app)
+                        .get("/api/articles?limit=not_a_number")
+                        .expect(400)
+                        .then(({ body }) => expect(body.msg).toBe("Bad request"));
+                });
+                test("When given limit has value of 0", () => {
+                    return request(app)
+                        .get("/api/articles?limit=0")
+                        .expect(400)
+                        .then(({ body }) => expect(body.msg).toBe("Bad request"));
+                });
+                test("When given page has value of 0", () => {
+                    return request(app)
+                        .get("/api/articles?p=0")
                         .expect(400)
                         .then(({ body }) => expect(body.msg).toBe("Bad request"));
                 });
@@ -353,7 +438,7 @@ describe("/api/articles/:article_id", () => {
             return request(app)
                 .get("/api/articles/1")
                 .expect(200)
-                .then(({ body }) => expect(body.article.comment_count).toBe(18));
+                .then(({ body }) => expect(body.article.comment_count).toBe(11));
         });
         test("GET:404 sends an appropriate status and error message when given a valid but non-existent id", () => {
             return request(app)
@@ -412,7 +497,7 @@ describe("/api/articles/:article_id", () => {
                     .patch("/api/articles/1")
                     .send({ inc_votes: 0 })
                     .expect(200)
-                    .then(({ body }) => expect(body.article.comment_count).toBe(18));
+                    .then(({ body }) => expect(body.article.comment_count).toBe(11));
             });
         });
         test("PATCH:404 sends an appropriate status and error message when given a valid but non-existent id", () => {

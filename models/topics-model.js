@@ -1,7 +1,7 @@
 const db = require("../db/connection")
 
-const notFound = { status: 404, msg: "topic does not exist" };
-const badRequest = { status: 400, msg: "Bad request" };
+const notFound = { status: 404, message: "topic does not exist" };
+const badRequest = { status: 400, message: "Bad request" };
 
 exports.getTopics = () => db
     .query("SELECT * FROM topics")
@@ -14,10 +14,7 @@ exports.getTopic = (slug) => db
 exports.createTopic = ({ slug, description, ...invalidKeys }) => {
     if (Object.keys(invalidKeys).length) return Promise.reject(badRequest); //Null checks to avoid not found
 
-    const [columns, params, values] = Object
-        .entries({ slug, description })
-        .reduce(([columns, params, values], [key, value], index) => [[...columns, key], [...params, `$${++index}`], [...values, value]], [[], [], []])
-
-    return db.query(`INSERT INTO topics (${columns}) VALUES (${params}) RETURNING *`, values)
+    return db
+        .query(`INSERT INTO topics (slug, description) VALUES ($1, $2) RETURNING *`, [slug, description])
         .then(({ rows }) => rows[0]);
 }

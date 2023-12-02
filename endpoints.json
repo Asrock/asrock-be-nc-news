@@ -27,13 +27,12 @@
             }
         }
     },
-    "GET /api/articles": {
-        "description": "serves an array of all articles",
+    "GET /api/topics/:topic/articles": {
+        "description": "serves an array of all articles for a topic",
         "notes": [
             "Sorted by created_at in ascending order by default"
         ],
         "queries": [
-            "topic",
             "sort_by",
             "order",
             "p",
@@ -55,10 +54,12 @@
             ]
         },
         "queryExamples": {
-            "Select(topic)": {
-                "queryExample": "/api/articles?topic=coding",
+            "Sorting(sort_by/order)": {
+                "queryExample": "/api/topics/coding/articles?sort_by=votes&order=asc&sort_by=author&order=desc&sort_by=title",
                 "notes": [
-                    "Will return not found when trying to access a topic that does not belong to this article"
+                    "When order is omitted descending is set by default",
+                    "'order' matches 'sort_by' by its position",
+                    "Bad request error will occur when order is set more times than sort_by"
                 ],
                 "response": {
                     "articles": [
@@ -75,6 +76,79 @@
                     ]
                 }
             },
+            "Pagination(p)": {
+                "queryExample": "/api/topics/coding/articles&p=1",
+                "notes": [
+                    "When p is set will default limit to 10",
+                    "Returns an extra property 'total_count' with the amount of articles",
+                    "Value cannot be zero"
+                ],
+                "response": {
+                    "articles": [
+                        {
+                            "article_id": 1,
+                            "author": "jessjelly",
+                            "title": "Running a Node App",
+                            "topic": "coding",
+                            "created_at": "2020-10-11T11:24:00.000Z",
+                            "votes": 0,
+                            "article_img_url": "https://images.pexels.com/photos/11035380/pexels-photo-11035380.jpeg?w=700&h=700",
+                            "comment_count": 18
+                        }
+                    ],
+                    "total_count": 12
+                }
+            },
+            "Limit(limit)": {
+                "queryExample": "/api/topics/coding/articles&limit=1",
+                "notes": [
+                    "Limit the results by the given value",
+                    "Value cannot be zero"
+                ],
+                "response": {
+                    "articles": [
+                        {
+                            "article_id": 1,
+                            "author": "jessjelly",
+                            "title": "Running a Node App",
+                            "topic": "coding",
+                            "created_at": "2020-10-11T11:24:00.000Z",
+                            "votes": 0,
+                            "article_img_url": "https://images.pexels.com/photos/11035380/pexels-photo-11035380.jpeg?w=700&h=700",
+                            "comment_count": 18
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    "GET /api/articles": {
+        "description": "serves an array of all articles",
+        "notes": [
+            "Sorted by created_at in ascending order by default"
+        ],
+        "queries": [
+            "sort_by",
+            "order",
+            "p",
+            "limit"
+        ],
+        "format": "json",
+        "exampleResponse": {
+            "articles": [
+                {
+                    "article_id": 1,
+                    "author": "jessjelly",
+                    "title": "Running a Node App",
+                    "topic": "coding",
+                    "created_at": "2020-10-11T11:24:00.000Z",
+                    "votes": 0,
+                    "article_img_url": "https://images.pexels.com/photos/11035380/pexels-photo-11035380.jpeg?w=700&h=700",
+                    "comment_count": 18
+                }
+            ]
+        },
+        "queryExamples": {
             "Sorting(sort_by/order)": {
                 "queryExample": "/api/articles?sort_by=topic&order=asc&sort_by=author&order=desc&sort_by=title",
                 "notes": [

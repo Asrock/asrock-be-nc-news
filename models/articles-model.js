@@ -22,6 +22,7 @@ exports.getArticles = ({ topic, sort_by, order, limit, p }) => {
     const sorts = Array.isArray(sort_by) ? sort_by : [sort_by ?? "created_at"];
     const orders = Array.isArray(order) ? order : [sort_by ? (order ?? "DESC") : (order ?? "ASC")];
     const sortableColumns = Object.keys(selectedColumns);                   //Sort allowed for all columns (including comment_count)
+    const offset = p ? (p * (limit ??= 10) - limit) : 0;                    //Set default limit when using pagination
 
     //Validation
     const isValid = sorts.every(col => sortableColumns.includes(col))       //Allowed columns only (prevent SQL injection)
@@ -47,7 +48,7 @@ exports.getArticles = ({ topic, sort_by, order, limit, p }) => {
         sqlQuery += ` LIMIT $${values.length}`;
 
     //OFFSET
-    if (p != null && values.push(p * (limit ??= 10) - limit)) {
+    if (p != null && values.push(offset)) {
         sqlQuery += ` OFFSET $${values.length}`;
 
         //Display total_count

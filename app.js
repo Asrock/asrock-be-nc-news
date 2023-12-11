@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require('cors');
 const { errorHandler, apiErrorHandler, sqlErrorHandler } = require("./errors-handler");
 const { getEndpointsInfo } = require("./controllers/api-controller");
 const { getTopics, postTopic, getTopicArticles } = require("./controllers/topics-controller");
@@ -8,6 +9,7 @@ const { patchComment, deleteComment } = require("./controllers/comments-controll
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 
 app.get("/api", getEndpointsInfo);

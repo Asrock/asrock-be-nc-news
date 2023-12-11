@@ -13,11 +13,11 @@ exports.postTopic = (req, res, next) => {
 };
 
 exports.getTopicArticles = (req, res, next) => {
-    const enabledQueries = { sort_by, order, limit, p } = req.query;
+    const { sort_by, order, limit, p } = req.query;
     const { topic } = req.params;
     return topicsModel
         .getTopic(topic)
-        .then(() => articlesModel.getArticles({ topic, ...enabledQueries }))
+        .then(() => articlesModel.getArticles({ topic, sort_by, order, limit, p }))
         .then(result => res.status(200).send(result))
         .catch(next);
 };

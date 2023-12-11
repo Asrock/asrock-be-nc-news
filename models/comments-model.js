@@ -1,32 +1,44 @@
 const db = require("../db/connection");
-const articlesModel = require("./articles-model");
-const usersModel = require("../models/users-model");
 
-const badRequest = { status: 400, msg: "Bad request" };
-const notFound = { status: 404, msg: "comment does not exist" };
+const badRequest = { status: 400, message: "Bad request" };
+const notFound = { status: 404, message: "comment does not exist" };
 
-exports.getComments = ({ article_id }, { p, limit }) => {
-    if(+limit === 0 || +p === 0) return Promise.reject(badRequest);
+exports.getComments = ({ article_id, limit, p }) => {
+    const hasArticle = article_id !== undefined;
 
-    const offset = p ? (p * (limit ??= 10) - limit) : 0;
+    //Validation
+    if (+limit === 0) return Promise.reject(badRequest);                    //Limit 0 is not allowed
 
-    return Promise.all([
-        db.query(`SELECT * FROM comments WHERE article_id = $1 LIMIT $2 OFFSET $3`, [article_id, limit, offset]),
-        articlesModel.getArticle(article_id)
-    ]).then(([{ rows }]) => rows);
+    const values = [];
+    let sqlQuery = `SELECT * FROM comments c`;
+
+    //WHERE
+    if (hasArticle && values.push(article_id))
+        sqlQuery += ` WHERE c.article_id = $${values.length}`;
+
+    //LIMIT
+    if (limit != null && values.push(+limit))
+        sqlQuery += ` LIMIT $${values.length}`;
+
+    //OFFSET
+    if (p != null && values.push(p * (limit ??= 10) - limit))
+        sqlQuery += ` OFFSET $${values.length}`;
+
+    return db
+        .query(sqlQuery, values)
+        .then(({ rows }) => rows);
 }
 
-//TODO - Check if should return 422
-exports.createComment = ({ article_id }, { username, body, ...invalidKeys }) => {
-    if (Object.keys(invalidKeys).length || (username == null)) return Promise.reject(badRequest);
-    
-    return Promise.all([articlesModel.getArticle(article_id), usersModel.getUser(username)])
-        .then(() => db.query(`INSERT INTO comments (body, article_id, author) VALUES ($1, $2, $3) RETURNING *`, [body, article_id, username]))
-        .then(({ rows }) => rows[0]);
+exports.createComment = ({ article_id, username, body, ...invalidKeys }) => {
+    if (Object.keys(invalidKeys).length) return Promise.reject(badRequest);
+
+    return db
+        .query(`INSERT INTO comments (article_id, author, body) VALUES ($1, $2, $3) RETURNING *`, [article_id, username, body])
+        .then(({ rows }) => rows[0])
 }
 
-exports.modifyComment = (id, { inc_votes, ...partialComment }) => {
-    if(Object.keys(partialComment).length) return Promise.reject(badRequest);
+exports.modifyComment = (id, { inc_votes, ...invalidKeys }) => {
+    if (Object.keys(invalidKeys).length) return Promise.reject(badRequest);
 
     return db
         .query(`UPDATE comments SET votes = (votes + $2) WHERE comment_id = $1 RETURNING *`, [id, inc_votes])
@@ -35,4 +47,4 @@ exports.modifyComment = (id, { inc_votes, ...partialComment }) => {
 
 exports.deleteComment = (id) => db
     .query("DELETE FROM comments WHERE comment_id = $1", [id])
-    .then(({rowCount}) => rowCount || Promise.reject(notFound));
+    .then(({ rowCount }) => rowCount || Promise.reject(notFound));

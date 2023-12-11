@@ -1,6 +1,6 @@
 const db = require("../db/connection")
 
-const notFound = {status:404, msg:"user does not exist"};
+const notFound = { status: 404, message: "user does not exist" };
 
 exports.getUsers = () => db
     .query("SELECT * FROM users")

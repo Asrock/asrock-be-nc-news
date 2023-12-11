@@ -2,8 +2,9 @@ const articlesModel = require("../models/articles-model");
 const commentsModel = require("../models/comments-model");
 
 exports.getArticles = (req, res, next) => {
-    return articlesModel.getArticles(req.query)
-        .then(articles => res.status(200).send(articles))
+    const { sort_by, order, limit, p } = req.query;
+    return articlesModel.getArticles({ sort_by, order, limit, p })
+        .then(result => res.status(200).send(result))
         .catch(next);
 };
 
@@ -32,13 +33,21 @@ exports.deleteArticle = (req, res, next) => {
 };
 
 exports.getArticleComments = (req, res, next) => {
-    return commentsModel.getComments(req.params, req.query)
+    const { limit, p } = req.query;
+    const { article_id } = req.params;
+
+    return articlesModel
+        .getArticle(article_id)
+        .then(() => commentsModel.getComments({ article_id, limit, p }))
         .then(comments => res.status(200).send({ comments }))
         .catch(next);
 };
 
 exports.postArticleComment = (req, res, next) => {
-    return commentsModel.createComment(req.params, req.body)
+    const { article_id } = req.params;
+    return articlesModel
+        .getArticle(article_id)
+        .then(() => commentsModel.createComment({ article_id, ...req.body }))
         .then(comment => res.status(201).send({ comment }))
         .catch(next);
 };
